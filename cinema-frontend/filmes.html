@@ -304,33 +304,44 @@ function renderSidebar() {
   const list = document.getElementById('filmList');
   list.innerHTML = FILMES.map(f => `
     <div class="film-thumb-item" id="item-${f.id}" onclick="showFilme(${f.id})">
-      <img class="thumb-img" src="${f.poster}" alt="${f.nome}">
+      <img class="thumb-img" src="${f.posterUrl}" alt="${f.nome}">
       <div style="flex:1;min-width:0;">
         <p class="thumb-info-nome">${f.nome}</p>
         <p class="thumb-info-meta">${f.duracao} · ${f.genero}</p>
       </div>
-      <span class="thumb-nota">${f.nota}</span>
+      
     </div>`).join('');
 }
 
 // ── SHOW FILM ───────────────────────────────────────────────────────────────
-function showFilme(id) {
+async function showFilme(id) {
   const f = FILMES.find(x => x.id === id);
   if (!f) return;
 
-  // Sidebar active state
   document.querySelectorAll('.film-thumb-item').forEach(el => el.classList.remove('active'));
   document.getElementById('item-' + id).classList.add('active');
 
-  // Reservar URL
   const reservarUrl = usuario
     ? `index.html?usuario=${encodeURIComponent(usuario)}&tipo=${tipo}#sessions`
     : 'login.html';
 
-  // Criticas
-  const criticasHtml = f.criticas.length === 0
+  // Busca críticas da API
+  let criticas = [];
+  try {
+    const res = await fetch(`http://localhost:8080/api/criticas/filme/${id}`);
+    criticas = await res.json();
+  } catch (err) {
+    console.error('Erro ao carregar críticas:', err);
+  }
+
+  // Calcula nota média
+  const nota = criticas.length > 0
+    ? (criticas.reduce((sum, c) => sum + c.nota, 0) / criticas.length).toFixed(1)
+    : null;
+
+  const criticasHtml = criticas.length === 0
     ? `<p class="no-criticas">Nenhuma crítica publicada ainda.</p>`
-    : f.criticas.map(c => `
+    : criticas.map(c => `
         <div class="critica-item">
           <div class="critica-header">
             <div>
@@ -339,31 +350,31 @@ function showFilme(id) {
             </div>
             <span class="critica-nota-badge">${c.nota}/10</span>
           </div>
-          <p class="critica-msg">"${c.mensagem}"</p>
+          <p class="critica-msg">${c.mensagem}</p>
         </div>`).join('');
 
   document.getElementById('detail').innerHTML = `
     <div class="fade-in">
-      <!-- HERO -->
       <div class="hero-section">
-        <div class="hero-bg" style="background-image:url('${f.cena}');background-position:${f.bgPos}"></div>
+        <div class="hero-bg" style="background-image:url('${f.cenaUrl}');background-position:center"></div>
         <div class="hero-overlay"></div>
         <div class="hero-content">
           <p class="hero-genero">${f.genero}</p>
           <h1 class="hero-title">${f.nome}</h1>
           <div class="hero-meta">
             <span>${f.duracao}</span>
-            <span class="badge badge-gray">${f.class}</span>
-            <span class="hero-nota"><span>${f.nota}</span>/10 · ${f.qtdCriticos} crítico(s)</span>
+            <span class="badge badge-gray">${f.classe || ''}</span>
+            ${nota
+              ? `<span class="hero-nota"><span>${nota}</span>/10 · ${criticas.length} crítico(s)</span>`
+              : `<span class="hero-nota" style="color:var(--muted)">Sem avaliações ainda</span>`
+            }
           </div>
           <a href="${reservarUrl}" class="btn-reservar">Reservar Ingresso →</a>
         </div>
       </div>
-
-      <!-- POSTER + INFO -->
       <div class="info-section">
         <div class="poster-col">
-          <img class="poster-img" src="${f.poster}" alt="${f.nome}">
+          <img class="poster-img" src="${f.posterUrl}" alt="${f.nome}">
         </div>
         <div class="info-col">
           <p class="sinopse-label">Sinopse</p>
@@ -375,10 +386,8 @@ function showFilme(id) {
           </div>
         </div>
       </div>
-
-      <!-- CRÍTICAS -->
       <div class="criticas-section">
-        <p class="section-label">Críticas (${f.criticas.length})</p>
+        <p class="section-label">Críticas (${criticas.length})</p>
         <div class="criticas-list">${criticasHtml}</div>
       </div>
     </div>`;
