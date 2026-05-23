@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CineNoir — Recuperar Senha</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #070608;
+      --surface:  #0e0809;
+      --surface2: #150b0b;
+      --red:      #cc2222;
+      --red-light:#e03333;
+      --cream:    #f5e8e8;
+      --muted:    #5a5a65;
+      --muted2:   #3a1a1a;
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      color: var(--cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9999; opacity: .3;
+    }
+
+    /* CARD */
+    .login-card {
+      display: flex;
+      width: min(900px, 95vw);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 60px 120px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.04);
+      animation: fadeUp .7s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* LEFT */
+    .panel-left {
+      position: relative;
+      flex: 1.1;
+      min-height: 420px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 2rem;
+    }
+
+    .panel-left-bg {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 30% 20%, rgba(180,20,20,.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 70% 80%, rgba(100,10,10,.25) 0%, transparent 55%),
+        linear-gradient(145deg, #110506 0%, #0a0305 40%, #0e0608 100%);
+    }
+
+    .panel-left::after {
+      content: '';
+      position: absolute;
+      top: 10%; bottom: 10%; right: 2.5rem;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, rgba(204,34,34,.3) 30%, rgba(204,34,34,.15) 70%, transparent);
+      pointer-events: none;
+    }
+
+    .panel-left::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,.012) 60px, rgba(255,255,255,.012) 61px);
+      pointer-events: none; z-index: 1;
+    }
+
+    .panel-left-content {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column; justify-content: space-between;
+      height: 100%;
+    }
+
+    .panel-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem; letter-spacing: .15em;
+      color: var(--red); text-decoration: none;
+    }
+    .panel-logo span { color: var(--cream); }
+
+    .panel-copy { padding-bottom: .5rem; }
+
+    .panel-eyebrow {
+      font-size: .65rem; letter-spacing: .25em;
+      text-transform: uppercase; color: var(--red);
+      margin-bottom: .75rem;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .panel-eyebrow::before { content: '✦'; font-size: .55rem; }
+
+    .panel-headline {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.8rem, 5vw, 4.2rem);
+      font-weight: 300; line-height: 1.1;
+      color: var(--cream); margin-bottom: 1rem;
+    }
+    .panel-headline em { font-style: italic; color: var(--red); }
+
+    .panel-tagline {
+      font-size: .72rem; color: rgba(245,232,232,.45);
+      letter-spacing: .05em; line-height: 1.6; max-width: 240px;
+    }
+
+    /* RIGHT */
+    .panel-right {
+      flex: 1;
+      background: var(--surface);
+      border-left: 1px solid var(--muted2);
+      padding: 2.5rem 2.8rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* STEPS */
+    .step { display: none; }
+    .step.active { display: flex; flex-direction: column; gap: .75rem; animation: fadeSlide .3s ease; }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateX(10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .form-icon { font-size: 1.4rem; color: var(--red); }
+
+    .form-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.9rem; font-weight: 300; color: var(--cream);
+    }
+
+    .form-desc { font-size: .8rem; color: var(--muted); line-height: 1.6; }
+
+    /* FIELD */
+    .field { position: relative; }
+
+    .field input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--muted2);
+      border-radius: 3px;
+      padding: .8rem 1rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .88rem; color: var(--cream);
+      outline: none;
+      transition: border-color .2s, background .2s;
+    }
+    .field input::placeholder { color: var(--muted); }
+    .field input:focus { border-color: var(--red); background: rgba(204,34,34,.04); }
+
+    /* OTP */
+    .otp-row { display: flex; gap: .6rem; justify-content: center; }
+
+    .otp-row input {
+      width: 52px; height: 52px;
+      flex: none;
+      background: var(--surface2);
+      border: 1px solid var(--muted2);
+      border-radius: 3px;
+      padding: 0;
+      text-align: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem; font-weight: 400;
+      color: var(--cream); outline: none;
+      transition: border-color .2s;
+    }
+    .otp-row input:focus { border-color: var(--red); background: rgba(204,34,34,.04); }
+
+    /* EYE */
+    .eye-btn {
+      position: absolute; right: .8rem; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      color: var(--muted); cursor: pointer; font-size: .85rem;
+      transition: color .2s;
+    }
+    .eye-btn:hover { color: var(--cream); }
+
+    /* STRENGTH */
+    .strength-bar { display: flex; gap: .3rem; }
+    .strength-seg {
+      flex: 1; height: 3px; border-radius: 2px;
+      background: var(--muted2); transition: background .3s;
+    }
+    .strength-label { font-size: .65rem; color: var(--muted); }
+
+    /* BUTTON */
+    .btn-submit {
+      width: 100%;
+      background: var(--red); color: #fff; border: none;
+      padding: .85rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .85rem; font-weight: 500;
+      letter-spacing: .12em; text-transform: uppercase;
+      border-radius: 3px; cursor: pointer;
+      transition: background .2s, transform .15s;
+      text-decoration: none; text-align: center; display: block;
+    }
+    .btn-submit:hover { background: var(--red-light); transform: translateY(-1px); }
+
+    .bottom-link {
+      font-size: .75rem; color: var(--muted); text-align: center;
+    }
+    .bottom-link a {
+      color: var(--muted); text-decoration: none;
+      border-bottom: 1px solid var(--muted2);
+      transition: color .2s, border-color .2s;
+    }
+    .bottom-link a:hover { color: var(--cream); border-color: var(--cream); }
+
+    .resend { font-size: .75rem; color: var(--muted); text-align: center; }
+    .resend button {
+      background: none; border: none; color: var(--red);
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      font-size: .75rem; text-decoration: underline;
+    }
+    .resend button:disabled { color: var(--muted); cursor: default; text-decoration: none; }
+
+    /* SUCCESS */
+    .success-box { text-align: center; }
+    .success-icon { font-size: 2.2rem; display: block; margin-bottom: .75rem; }
+    .success-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem; font-weight: 300;
+      color: var(--cream); margin-bottom: .5rem;
+    }
+    .success-desc { font-size: .82rem; color: var(--muted); line-height: 1.6; margin-bottom: 1.25rem; }
+
+    /* BACK */
+    .back-fixed {
+      position: fixed; top: 1.5rem; left: 2rem;
+      font-size: .72rem; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--muted);
+      text-decoration: none; display: flex; align-items: center; gap: .5rem;
+      transition: color .2s; z-index: 10;
+    }
+    .back-fixed:hover { color: var(--cream); }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-6px); }
+      60%      { transform: translateX(6px); }
+      80%      { transform: translateX(-3px); }
+    }
+
+    @media (max-width: 640px) {
+      .panel-left { display: none; }
+      .panel-right { padding: 2rem 1.5rem; }
+      .login-card { width: 100vw; border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<a href="login.html" class="back-fixed">← Voltar</a>
+
+<div class="login-card">
+
+  <!-- LEFT -->
+  <div class="panel-left">
+    <div class="panel-left-bg"></div>
+    <div class="panel-left-content">
+      <a href="index.html" class="panel-logo">Cine<span>Noir</span></a>
+      <div class="panel-copy">
+        <p class="panel-eyebrow">Recuperação</p>
+        <h2 class="panel-headline">Cine<em>Noir</em></h2>
+        <p class="panel-tagline">Vamos te ajudar a recuperar o acesso à sua conta em poucos passos.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="panel-right">
+
+    <!-- STEP 1: EMAIL -->
+    <div class="step active" id="step1">
+      <span class="form-icon">✦</span>
+      <h1 class="form-title">Esqueci a senha</h1>
+      <p class="form-desc">Digite seu e-mail cadastrado. Vamos enviar um código de verificação.</p>
+      <div class="field">
+        <input type="email" id="emailInput" placeholder="Seu e-mail" />
+      </div>
+      <button class="btn-submit" onclick="goStep2()">Enviar código →</button>
+      <p class="bottom-link"><a href="login.html">← Voltar ao login</a></p>
+    </div>
+
+    <!-- STEP 2: CÓDIGO OTP -->
+    <div class="step" id="step2">
+      <span class="form-icon">✦</span>
+      <h1 class="form-title">Código enviado</h1>
+      <p class="form-desc" id="step2desc">Digite o código de 4 dígitos enviado para o seu e-mail.</p>
+      <div class="otp-row">
+        <input type="text" maxlength="1" id="otp0" oninput="otpMove(this,0)" onkeydown="otpBack(event,0)" />
+        <input type="text" maxlength="1" id="otp1" oninput="otpMove(this,1)" onkeydown="otpBack(event,1)" />
+        <input type="text" maxlength="1" id="otp2" oninput="otpMove(this,2)" onkeydown="otpBack(event,2)" />
+        <input type="text" maxlength="1" id="otp3" oninput="otpMove(this,3)" onkeydown="otpBack(event,3)" />
+      </div>
+      <button class="btn-submit" onclick="goStep3()">Verificar →</button>
+      <p class="resend">Não recebeu? <button id="resendBtn" onclick="resendCode()">Reenviar</button> <span id="resendTimer"></span></p>
+    </div>
+
+    <!-- STEP 3: NOVA SENHA -->
+    <div class="step" id="step3">
+      <span class="form-icon">✦</span>
+      <h1 class="form-title">Nova senha</h1>
+      <p class="form-desc">Escolha uma senha segura para sua conta.</p>
+      <div class="field">
+        <input type="password" id="novaSenha" placeholder="Nova senha" oninput="checkStrength()" />
+        <button class="eye-btn" type="button" onclick="togglePass('novaSenha',this)">👁</button>
+      </div>
+      <div class="strength-bar">
+        <div class="strength-seg" id="seg0"></div>
+        <div class="strength-seg" id="seg1"></div>
+        <div class="strength-seg" id="seg2"></div>
+        <div class="strength-seg" id="seg3"></div>
+      </div>
+      <p class="strength-label" id="strengthLabel">—</p>
+      <div class="field">
+        <input type="password" id="confirmSenha" placeholder="Confirmar nova senha" />
+        <button class="eye-btn" type="button" onclick="togglePass('confirmSenha',this)">👁</button>
+      </div>
+      <button class="btn-submit" onclick="goStep4()">Redefinir senha →</button>
+    </div>
+
+    <!-- STEP 4: SUCESSO -->
+    <div class="step" id="step4">
+      <div class="success-box">
+        <span class="success-icon">✦</span>
+        <h2 class="success-title">Senha redefinida!</h2>
+        <p class="success-desc">Sua senha foi atualizada com sucesso.<br>Agora você pode fazer login normalmente.</p>
+        <a href="login.html" class="btn-submit">Ir para o Login →</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function showStep(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step' + n).classList.add('active');
+  }
+
+  function goStep2() {
+    const email = document.getElementById('emailInput').value.trim();
+    if (!email || !email.includes('@')) { shake('step1'); return; }
+    document.getElementById('step2desc').textContent =
+      'Digite o código de 4 dígitos enviado para ' + email + '.';
+    showStep(2);
+    document.getElementById('otp0').focus();
+    startResendTimer();
+  }
+
+  function goStep3() {
+    const code = [0,1,2,3].map(i => document.getElementById('otp'+i).value).join('');
+    if (code.length < 4) { shake('step2'); return; }
+    showStep(3);
+    document.getElementById('novaSenha').focus();
+  }
+
+  function goStep4() {
+    const nova    = document.getElementById('novaSenha').value;
+    const confirm = document.getElementById('confirmSenha').value;
+    if (nova.length < 6)  { shake('step3'); alert('Senha deve ter ao menos 6 caracteres.'); return; }
+    if (nova !== confirm) { shake('step3'); alert('As senhas não coincidem.'); return; }
+    showStep(4);
+  }
+
+  function otpMove(el, idx) {
+    el.value = el.value.replace(/\D/g, '');
+    if (el.value && idx < 3) document.getElementById('otp' + (idx+1)).focus();
+  }
+
+  function otpBack(e, idx) {
+    if (e.key === 'Backspace' && !e.target.value && idx > 0)
+      document.getElementById('otp' + (idx-1)).focus();
+  }
+
+  let timerInterval;
+  function startResendTimer() {
+    const btn = document.getElementById('resendBtn');
+    const lbl = document.getElementById('resendTimer');
+    btn.disabled = true;
+    let sec = 60;
+    lbl.textContent = '(' + sec + 's)';
+    timerInterval = setInterval(() => {
+      sec--;
+      lbl.textContent = '(' + sec + 's)';
+      if (sec <= 0) {
+        clearInterval(timerInterval);
+        btn.disabled = false;
+        lbl.textContent = '';
+      }
+    }, 1000);
+  }
+
+  function resendCode() { startResendTimer(); }
+
+  function checkStrength() {
+    const p = document.getElementById('novaSenha').value;
+    let score = 0;
+    if (p.length >= 6)  score++;
+    if (p.length >= 10) score++;
+    if (/[A-Z]/.test(p) && /[0-9]/.test(p)) score++;
+    if (/[^A-Za-z0-9]/.test(p)) score++;
+    const colors = ['#e74c3c','#e67e22','#f1c40f','#2ecc71'];
+    const labels = ['Fraca','Razoável','Boa','Forte'];
+    for (let i = 0; i < 4; i++)
+      document.getElementById('seg'+i).style.background = i < score ? colors[score-1] : 'var(--muted2)';
+    const lbl = document.getElementById('strengthLabel');
+    lbl.textContent = score > 0 ? labels[score-1] : '—';
+    lbl.style.color = score > 0 ? colors[score-1] : 'var(--muted)';
+  }
+
+  function togglePass(id, btn) {
+    const el = document.getElementById(id);
+    const show = el.type === 'text';
+    el.type = show ? 'password' : 'text';
+    btn.textContent = show ? '👁' : '🙈';
+  }
+
+  function shake(id) {
+    const el = document.getElementById(id);
+    el.style.animation = 'none'; el.offsetHeight;
+    el.style.animation = 'shake .35s ease';
+  }
+</script>
+</body>
+</html>

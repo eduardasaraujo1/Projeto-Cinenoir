@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CineNoir — Painel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #070608;
+      --surface:  #0e0809;
+      --surface2: #150b0b;
+      --red:      #cc2222;
+      --red-light:#e03333;
+      --cream:    #f5e8e8;
+      --muted:    #5a5a65;
+      --muted2:   #3a1a1a;
+      --text:     #ddd8cc;
+      --sidebar:  220px;
+    }
+
+    html, body { min-height: 100vh; background: var(--bg); font-family: 'DM Sans', sans-serif; font-weight: 300; color: var(--text); }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9999; opacity: .3;
+    }
+
+    /* ── LAYOUT ── */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar);
+      background: var(--surface);
+      border-right: 1px solid var(--muted2);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0;
+      z-index: 10;
+    }
+
+    .sidebar-logo {
+      padding: 1.5rem 1.5rem 1.25rem;
+      border-bottom: 1px solid var(--muted2);
+    }
+
+    .logo-text {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem; letter-spacing: .15em;
+      color: var(--red); text-decoration: none; display: block;
+    }
+    .logo-text span { color: var(--cream); }
+
+    .sidebar-role {
+      font-size: .6rem; letter-spacing: .18em;
+      text-transform: uppercase; color: var(--muted);
+      margin-top: .25rem;
+    }
+
+    .sidebar-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
+
+    .nav-section {
+      font-size: .58rem; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--muted);
+      padding: .75rem 1.5rem .4rem;
+    }
+
+    .nav-item {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .65rem 1.5rem;
+      font-size: .82rem; color: var(--muted);
+      cursor: pointer;
+      transition: color .2s, background .2s;
+      border-left: 2px solid transparent;
+      user-select: none;
+    }
+
+    .nav-item:hover { color: var(--cream); background: rgba(204,34,34,.04); }
+    .nav-item.active { color: var(--cream); border-left-color: var(--red); background: rgba(204,34,34,.06); }
+    .nav-item.active .nav-icon { color: var(--red); }
+    .nav-item.disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
+
+    .nav-icon { font-size: 1rem; width: 18px; text-align: center; }
+
+    .sidebar-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--muted2);
+    }
+
+    .user-mini {
+      display: flex; align-items: center; gap: .75rem;
+      margin-bottom: .75rem;
+    }
+
+    .avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--red);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .7rem; font-weight: 500; color: #fff;
+      flex-shrink: 0;
+    }
+
+    .user-mini-name { font-size: .8rem; color: var(--cream); }
+    .user-mini-role { font-size: .62rem; color: var(--red); letter-spacing: .08em; text-transform: uppercase; }
+
+    .btn-logout {
+      width: 100%; background: none;
+      border: 1px solid var(--muted2); color: var(--muted);
+      padding: .5rem; font-family: 'DM Sans', sans-serif;
+      font-size: .72rem; letter-spacing: .1em; text-transform: uppercase;
+      border-radius: 2px; cursor: pointer;
+      transition: border-color .2s, color .2s;
+    }
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── MAIN ── */
+    .main {
+      margin-left: var(--sidebar);
+      flex: 1; padding: 2rem 2.5rem;
+      min-height: 100vh;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+
+    .page-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem; letter-spacing: .1em; color: var(--cream);
+    }
+
+    .page-sub { font-size: .78rem; color: var(--muted); margin-top: .1rem; }
+
+    /* ── STATS ROW ── */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1rem; margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--muted2);
+      border-radius: 4px; padding: 1.25rem 1.5rem;
+    }
+
+    .stat-label {
+      font-size: .65rem; letter-spacing: .15em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: .5rem;
+    }
+
+    .stat-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem; font-weight: 300; color: var(--cream); line-height: 1;
+    }
+
+    .stat-delta {
+      font-size: .7rem; color: var(--red); margin-top: .3rem;
+    }
+
+    /* ── SECTION ── */
+    .section { display: none; }
+    .section.active { display: block; animation: fadeIn .3s ease; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── TABLE ── */
+    .table-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .table-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem; font-weight: 300; color: var(--cream);
+    }
+
+    .btn-add {
+      background: var(--red); color: #fff; border: none;
+      padding: .55rem 1.2rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .75rem; letter-spacing: .1em; text-transform: uppercase;
+      border-radius: 2px; cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-add:hover { background: var(--red-light); }
+
+    .table-wrap {
+      background: var(--surface); border: 1px solid var(--muted2);
+      border-radius: 4px; overflow: hidden;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    thead tr { border-bottom: 1px solid var(--muted2); }
+
+    th {
+      padding: .75rem 1.25rem;
+      font-size: .62rem; letter-spacing: .15em;
+      text-transform: uppercase; color: var(--muted);
+      text-align: left; font-weight: 400;
+    }
+
+    td {
+      padding: .85rem 1.25rem;
+      font-size: .85rem; color: var(--text);
+      border-bottom: 1px solid rgba(58,26,26,.5);
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: rgba(204,34,34,.03); }
+
+    .badge {
+      display: inline-block; padding: .2rem .55rem;
+      border-radius: 2px; font-size: .62rem;
+      letter-spacing: .1em; text-transform: uppercase;
+    }
+
+    .badge-red   { background: rgba(204,34,34,.15); color: var(--red); border: 1px solid rgba(204,34,34,.3); }
+    .badge-gray  { background: rgba(90,90,101,.1);  color: var(--muted); border: 1px solid var(--muted2); }
+    .badge-green { background: rgba(46,204,113,.1); color: #2ecc71; border: 1px solid rgba(46,204,113,.3); }
+
+    .action-btns { display: flex; gap: .5rem; }
+
+    .btn-edit, .btn-del {
+      background: none; border: 1px solid var(--muted2);
+      padding: .3rem .7rem; border-radius: 2px;
+      font-size: .68rem; letter-spacing: .08em; text-transform: uppercase;
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      transition: all .2s;
+    }
+    .btn-edit { color: var(--muted); }
+    .btn-edit:hover { border-color: var(--cream); color: var(--cream); }
+    .btn-del  { color: var(--red); border-color: rgba(204,34,34,.3); }
+    .btn-del:hover { background: rgba(204,34,34,.1); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.75);
+      z-index: 100;
+      display: none; align-items: center; justify-content: center;
+      backdrop-filter: blur(3px);
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface); border: 1px solid var(--muted2);
+      border-radius: 4px; width: min(520px, 92vw);
+      overflow: hidden; animation: slideUp .25s ease;
+    }
+
+    @keyframes slideUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }
+
+    .modal-head {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--muted2);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .modal-head h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem; font-weight: 300; color: var(--cream);
+    }
+
+    .modal-close {
+      background: none; border: none; color: var(--muted);
+      font-size: 1.4rem; cursor: pointer; line-height: 1;
+      transition: color .2s;
+    }
+    .modal-close:hover { color: var(--cream); }
+
+    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: .85rem; }
+
+    .modal-row { display: flex; gap: .75rem; }
+    .modal-row .field { flex: 1; }
+
+    .field { display: flex; flex-direction: column; gap: .35rem; }
+
+    .field label {
+      font-size: .62rem; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--muted);
+    }
+
+    .field input, .field select {
+      background: var(--surface2); border: 1px solid var(--muted2);
+      border-radius: 3px; padding: .7rem .9rem;
+      font-family: 'DM Sans', sans-serif; font-size: .85rem;
+      color: var(--cream); outline: none;
+      transition: border-color .2s;
+      appearance: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--red); }
+    .field select option { background: var(--surface2); }
+
+    .modal-foot {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--muted2);
+      display: flex; justify-content: flex-end; gap: .75rem;
+    }
+
+    .btn-cancel {
+      background: none; border: 1px solid var(--muted2);
+      color: var(--muted); padding: .6rem 1.4rem;
+      font-family: 'DM Sans', sans-serif; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase;
+      border-radius: 2px; cursor: pointer; transition: all .2s;
+    }
+    .btn-cancel:hover { border-color: var(--cream); color: var(--cream); }
+
+    .btn-save {
+      background: var(--red); color: #fff; border: none;
+      padding: .6rem 1.6rem;
+      font-family: 'DM Sans', sans-serif; font-size: .78rem;
+      letter-spacing: .1em; text-transform: uppercase;
+      border-radius: 2px; cursor: pointer; transition: background .2s;
+    }
+    .btn-save:hover { background: var(--red-light); }
+
+    /* ── CONFIRM DIALOG ── */
+    .confirm-modal {
+      background: var(--surface); border: 1px solid var(--muted2);
+      border-radius: 4px; width: min(380px, 92vw);
+      padding: 1.75rem; text-align: center;
+      animation: slideUp .25s ease;
+    }
+
+    .confirm-modal h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem; font-weight: 300; color: var(--cream);
+      margin-bottom: .5rem;
+    }
+
+    .confirm-modal p { font-size: .82rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
+
+    .confirm-btns { display: flex; gap: .75rem; justify-content: center; }
+
+    /* search */
+    .search-input {
+      background: var(--surface2); border: 1px solid var(--muted2);
+      border-radius: 3px; padding: .55rem .9rem;
+      font-family: 'DM Sans', sans-serif; font-size: .82rem;
+      color: var(--cream); outline: none; width: 220px;
+      transition: border-color .2s;
+    }
+    .search-input:focus { border-color: var(--red); }
+    .search-input::placeholder { color: var(--muted); }
+
+    .table-controls { display: flex; gap: .75rem; align-items: center; }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <a href="#" onclick="goHome()" class="logo-text">Cine<span>Noir</span></a>
+      <p class="sidebar-role" id="sidebarRole">Painel</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <p class="nav-section">Visão Geral</p>
+      <div class="nav-item active" onclick="showSection('dashboard')">
+        <span class="nav-icon">◈</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="goHome()">
+        <span class="nav-icon">⌂</span> Ver Site
+      </div>
+
+      <p class="nav-section">Gerenciar</p>
+      <div class="nav-item" onclick="showSection('filmes')">
+        <span class="nav-icon">🎬</span> Filmes
+      </div>
+      <div class="nav-item" onclick="showSection('sessoes')">
+        <span class="nav-icon">🎟</span> Sessões
+      </div>
+      <div class="nav-item" onclick="showSection('salas')">
+        <span class="nav-icon">🏛</span> Salas
+      </div>
+
+      <p class="nav-section">Administração</p>
+      <div class="nav-item" id="navUsuarios" onclick="showSection('usuarios')">
+        <span class="nav-icon">👤</span> Usuários
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-mini">
+        <div class="avatar" id="sidebarAvatar">AD</div>
+        <div>
+          <p class="user-mini-name" id="sidebarName">Admin</p>
+          <p class="user-mini-role" id="sidebarRoleBadge">Admin</p>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()">← Sair</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <section class="section active" id="sec-dashboard">
+      <div class="topbar">
+        <div>
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-sub">Visão geral do sistema</p>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <p class="stat-label">Filmes em Cartaz</p>
+          <p class="stat-value" id="statFilmes">6</p>
+          <p class="stat-delta">↑ Temporada 2026</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Sessões Hoje</p>
+          <p class="stat-value" id="statSessoes">18</p>
+          <p class="stat-delta">↑ 3 salas ativas</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Usuários Cadastrados</p>
+          <p class="stat-value" id="statUsuarios">—</p>
+          <p class="stat-delta" id="statUsuariosSub">—</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Salas</p>
+          <p class="stat-value">4</p>
+          <p class="stat-delta">Comum, 3D, XD, XD/3D</p>
+        </div>
+      </div>
+
+      <!-- Recent activity -->
+      <div class="table-header" style="margin-top:1rem;">
+        <h2 class="table-title">Atividade Recente</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Ação</th><th>Detalhes</th><th>Horário</th><th>Status</th>
+          </tr></thead>
+          <tbody>
+            <tr><td>Sessão criada</td><td>The Secret Agent — Sala XD — 21:00</td><td>Hoje, 09:14</td><td><span class="badge badge-green">OK</span></td></tr>
+            <tr><td>Usuário cadastrado</td><td>joao123 — Comum</td><td>Hoje, 08:50</td><td><span class="badge badge-green">OK</span></td></tr>
+            <tr><td>Filme adicionado</td><td>Devoradores de Estrelas</td><td>Ontem, 17:32</td><td><span class="badge badge-green">OK</span></td></tr>
+            <tr><td>Sessão esgotada</td><td>Michael — Sala 3D — 18:30</td><td>Ontem, 20:01</td><td><span class="badge badge-gray">Info</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- FILMES -->
+    <section class="section" id="sec-filmes">
+      <div class="topbar">
+        <div>
+          <h1 class="page-title">Filmes</h1>
+          <p class="page-sub">Gerenciar filmes em cartaz</p>
+        </div>
+      </div>
+      <div class="table-header">
+        <div class="table-controls">
+          <input class="search-input" placeholder="Buscar filme..." oninput="filterTable('tbl-filmes', this.value)" />
+        </div>
+        <button class="btn-add" onclick="openModal('filme')">+ Novo Filme</button>
+      </div>
+      <div class="table-wrap">
+        <table id="tbl-filmes">
+          <thead><tr>
+            <th>Nome</th><th>Gênero</th><th>Duração</th><th>Class.</th><th>Valor Base</th><th>Ações</th>
+          </tr></thead>
+          <tbody id="tbody-filmes"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SESSÕES -->
+    <section class="section" id="sec-sessoes">
+      <div class="topbar">
+        <div>
+          <h1 class="page-title">Sessões</h1>
+          <p class="page-sub">Gerenciar sessões e horários</p>
+        </div>
+      </div>
+      <div class="table-header">
+        <div class="table-controls">
+          <input class="search-input" placeholder="Buscar sessão..." oninput="filterTable('tbl-sessoes', this.value)" />
+        </div>
+        <button class="btn-add" onclick="openModal('sessao')">+ Nova Sessão</button>
+      </div>
+      <div class="table-wrap">
+        <table id="tbl-sessoes">
+          <thead><tr>
+            <th>Filme</th><th>Data</th><th>Horário</th><th>Sala</th><th>Lugares</th><th>Ações</th>
+          </tr></thead>
+          <tbody id="tbody-sessoes"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SALAS -->
+    <section class="section" id="sec-salas">
+      <div class="topbar">
+        <div>
+          <h1 class="page-title">Salas</h1>
+          <p class="page-sub">Tipos e multiplicadores de preço</p>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin-top:.5rem;">
+        <table>
+          <thead><tr><th>Tipo</th><th>Multiplicador</th><th>Capacidade</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Comum</td><td>×1.0</td><td>150 lugares</td><td><span class="badge badge-green">Ativa</span></td></tr>
+            <tr><td>3D</td><td>×1.2</td><td>150 lugares</td><td><span class="badge badge-green">Ativa</span></td></tr>
+            <tr><td>XD</td><td>×1.3</td><td>150 lugares</td><td><span class="badge badge-green">Ativa</span></td></tr>
+            <tr><td>XD/3D</td><td>×1.4</td><td>150 lugares</td><td><span class="badge badge-green">Ativa</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- USUÁRIOS (admin only) -->
+    <section class="section" id="sec-usuarios">
+      <div class="topbar">
+        <div>
+          <h1 class="page-title">Usuários</h1>
+          <p class="page-sub">Gerenciar contas cadastradas</p>
+        </div>
+      </div>
+      <div class="table-header">
+        <div class="table-controls">
+          <input class="search-input" placeholder="Buscar usuário..." oninput="filterTable('tbl-usuarios', this.value)" />
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="tbl-usuarios">
+          <thead><tr>
+            <th>Usuário</th><th>E-mail</th><th>Tipo</th><th>Idade</th><th>Ações</th>
+          </tr></thead>
+          <tbody id="tbody-usuarios"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- MODAL FILME -->
+<div class="modal-overlay" id="modal-filme">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-filme-title">Novo Filme</h3>
+      <button class="modal-close" onclick="closeModal('modal-filme')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-row">
+        <div class="field"><label>Nome</label><input type="text" id="f-nome" placeholder="Nome do filme" /></div>
+      </div>
+      <div class="modal-row">
+        <div class="field"><label>Gênero</label><input type="text" id="f-genero" placeholder="Ex: Drama" /></div>
+        <div class="field"><label>Duração</label><input type="text" id="f-duracao" placeholder="Ex: 2h 10min" /></div>
+      </div>
+      <div class="modal-row">
+        <div class="field"><label>Classificação</label>
+          <select id="f-class">
+            <option>Livre</option><option>10+</option><option>12+</option>
+            <option>14+</option><option>16+</option><option>18+</option>
+          </select>
+        </div>
+        <div class="field"><label>Valor base (R$)</label><input type="number" id="f-valor" placeholder="25.00" step="0.5" /></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeModal('modal-filme')">Cancelar</button>
+      <button class="btn-save" onclick="saveFilme()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SESSÃO -->
+<div class="modal-overlay" id="modal-sessao">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-sessao-title">Nova Sessão</h3>
+      <button class="modal-close" onclick="closeModal('modal-sessao')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Filme</label>
+        <select id="s-filme" id="s-filme"></select>
+      </div>
+      <div class="modal-row">
+        <div class="field"><label>Data</label><input type="date" id="s-data" /></div>
+        <div class="field"><label>Horário</label><input type="time" id="s-horario" /></div>
+      </div>
+      <div class="field"><label>Tipo de Sala</label>
+        <select id="s-sala">
+          <option value="COMUM">Comum (×1.0)</option>
+          <option value="SALA3D">3D (×1.2)</option>
+          <option value="XD">XD (×1.3)</option>
+          <option value="XD3D">XD/3D (×1.4)</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeModal('modal-sessao')">Cancelar</button>
+      <button class="btn-save" onclick="saveSessao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR EXCLUSÃO -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="confirm-modal">
+    <h3>Confirmar exclusão</h3>
+    <p id="confirm-msg">Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.</p>
+    <div class="confirm-btns">
+      <button class="btn-cancel" onclick="closeModal('modal-confirm')">Cancelar</button>
+      <button class="btn-save" style="background:#c0392b" onclick="confirmDelete()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── PARAMS ──────────────────────────────────────────────────────────────────
+  const params  = new URLSearchParams(window.location.search);
+  const usuario = params.get('usuario') || 'Admin';
+  const tipo    = params.get('tipo')    || 'admin';
+  const isAdmin = tipo === 'admin';
+
+  // Redirect if not staff
+  if (tipo !== 'admin' && tipo !== 'funcionario') {
+    window.location.href = 'index.html';
+  }
+
+  // Set sidebar info
+  document.getElementById('sidebarName').textContent     = usuario;
+  document.getElementById('sidebarAvatar').textContent   = usuario.slice(0,2).toUpperCase();
+  document.getElementById('sidebarRoleBadge').textContent = isAdmin ? 'Administrador' : 'Funcionário';
+  document.getElementById('sidebarRole').textContent      = isAdmin ? 'Administrador' : 'Funcionário';
+
+  // Hide Usuários nav for funcionario
+  if (!isAdmin) {
+    document.getElementById('navUsuarios').classList.add('disabled');
+  }
+
+  // ── DATA ────────────────────────────────────────────────────────────────────
+  let filmes = [
+    { id:1, nome:'The Secret Agent',       genero:'Thriller',  duracao:'2h 10min', class:'16+', valor:28 },
+    { id:2, nome:'O Diabo Veste Prada 2',  genero:'Comédia',   duracao:'1h 58min', class:'12+', valor:25 },
+    { id:3, nome:'Michael',                genero:'Biografia', duracao:'2h 08min', class:'12+', valor:30 },
+    { id:4, nome:'Devoradores de Estrelas',genero:'Ficção',    duracao:'2h 15min', class:'12+', valor:28 },
+    { id:5, nome:'Obsessão',               genero:'Terror',    duracao:'1h 44min', class:'16+', valor:25 },
+    { id:6, nome:'Super Mario Bros.',      genero:'Animação',  duracao:'1h 32min', class:'Livre',valor:22 },
+  ];
+
+  let sessoes = [
+    { id:1, filmeId:1, data:'2026-05-22', horario:'21:00', sala:'XD',     lugares:142 },
+    { id:2, filmeId:2, data:'2026-05-22', horario:'18:30', sala:'COMUM',  lugares:98  },
+    { id:3, filmeId:3, data:'2026-05-22', horario:'16:00', sala:'SALA3D', lugares:0   },
+    { id:4, filmeId:4, data:'2026-05-22', horario:'13:30', sala:'XD3D',   lugares:55  },
+  ];
+
+  let usuarios = [
+    { id:1, user:'joao123',  email:'joao@email.com',    tipo:'usuario',   idade:24 },
+    { id:2, user:'maria_s',  email:'maria@email.com',   tipo:'estudante', idade:20 },
+    { id:3, user:'critic01', email:'critico@imdb.com',  tipo:'critico',   idade:35 },
+  ];
+
+  let nextId = { filme: 7, sessao: 5, usuario: 4 };
+
+  // Update dashboard stats
+  document.getElementById('statFilmes').textContent   = filmes.length;
+  document.getElementById('statSessoes').textContent  = sessoes.length;
+  if (isAdmin) {
+    document.getElementById('statUsuarios').textContent    = usuarios.length;
+    document.getElementById('statUsuariosSub').textContent = '↑ Cadastrados';
+  } else {
+    document.getElementById('statUsuarios').textContent    = '—';
+    document.getElementById('statUsuariosSub').textContent = 'Sem acesso';
+  }
+
+  // ── NAVIGATION ──────────────────────────────────────────────────────────────
+  function showSection(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('sec-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+    if (name === 'filmes')  renderFilmes();
+    if (name === 'sessoes') renderSessoes();
+    if (name === 'usuarios' && isAdmin) renderUsuarios();
+  }
+
+  // ── RENDER FILMES ────────────────────────────────────────────────────────────
+  function renderFilmes() {
+    const tbody = document.getElementById('tbody-filmes');
+    tbody.innerHTML = filmes.map(f => `
+      <tr>
+        <td>${f.nome}</td>
+        <td>${f.genero}</td>
+        <td>${f.duracao}</td>
+        <td><span class="badge badge-gray">${f.class}</span></td>
+        <td>R$ ${f.valor.toFixed(2)}</td>
+        <td><div class="action-btns">
+          <button class="btn-edit" onclick="editFilme(${f.id})">Editar</button>
+          <button class="btn-del"  onclick="askDelete('filme',${f.id})">Excluir</button>
+        </div></td>
+      </tr>`).join('');
+    updateFilmeSelect();
+  }
+
+  function updateFilmeSelect() {
+    const sel = document.getElementById('s-filme');
+    sel.innerHTML = filmes.map(f => `<option value="${f.id}">${f.nome}</option>`).join('');
+  }
+
+  // ── RENDER SESSÕES ───────────────────────────────────────────────────────────
+  function renderSessoes() {
+    const tbody = document.getElementById('tbody-sessoes');
+    const salaLabels = { COMUM:'Comum', SALA3D:'3D', XD:'XD', XD3D:'XD/3D' };
+    tbody.innerHTML = sessoes.map(s => {
+      const filme = filmes.find(f => f.id === s.filmeId);
+      const badge = s.lugares === 0 ? 'badge-red' : s.lugares < 30 ? 'badge-gray' : 'badge-green';
+      const lugaresText = s.lugares === 0 ? 'Esgotado' : s.lugares + ' liv.';
+      return `
+        <tr>
+          <td>${filme ? filme.nome : '—'}</td>
+          <td>${s.data}</td>
+          <td>${s.horario}</td>
+          <td>${salaLabels[s.sala] || s.sala}</td>
+          <td><span class="badge ${badge}">${lugaresText}</span></td>
+          <td><div class="action-btns">
+            <button class="btn-edit" onclick="editSessao(${s.id})">Editar</button>
+            <button class="btn-del"  onclick="askDelete('sessao',${s.id})">Excluir</button>
+          </div></td>
+        </tr>`;
+    }).join('');
+  }
+
+  // ── RENDER USUÁRIOS ──────────────────────────────────────────────────────────
+  function renderUsuarios() {
+    if (!isAdmin) return;
+    const tipoLabel = { usuario:'Comum', estudante:'Estudante', critico:'Crítico' };
+    const tipoBadge = { usuario:'badge-gray', estudante:'badge-green', critico:'badge-red' };
+    const tbody = document.getElementById('tbody-usuarios');
+    tbody.innerHTML = usuarios.map(u => `
+      <tr>
+        <td>${u.user}</td>
+        <td>${u.email}</td>
+        <td><span class="badge ${tipoBadge[u.tipo]}">${tipoLabel[u.tipo]}</span></td>
+        <td>${u.idade}</td>
+        <td><div class="action-btns">
+          <button class="btn-del" onclick="askDelete('usuario',${u.id})">Excluir</button>
+        </div></td>
+      </tr>`).join('');
+  }
+
+  // ── MODALS ───────────────────────────────────────────────────────────────────
+  function openModal(type) {
+    document.getElementById('modal-' + type).classList.add('open');
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+    pendingDelete = null;
+  }
+
+  // Close on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(ov => {
+    ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+  });
+
+  // ── FILME CRUD ───────────────────────────────────────────────────────────────
+  let editingFilmeId = null;
+
+  function editFilme(id) {
+    const f = filmes.find(x => x.id === id);
+    if (!f) return;
+    editingFilmeId = id;
+    document.getElementById('f-nome').value    = f.nome;
+    document.getElementById('f-genero').value  = f.genero;
+    document.getElementById('f-duracao').value = f.duracao;
+    document.getElementById('f-class').value   = f.class;
+    document.getElementById('f-valor').value   = f.valor;
+    document.getElementById('modal-filme-title').textContent = 'Editar Filme';
+    openModal('filme');
+  }
+
+  function saveFilme() {
+    const nome    = document.getElementById('f-nome').value.trim();
+    const genero  = document.getElementById('f-genero').value.trim();
+    const duracao = document.getElementById('f-duracao').value.trim();
+    const cls     = document.getElementById('f-class').value;
+    const valor   = parseFloat(document.getElementById('f-valor').value);
+    if (!nome || !genero || !duracao || isNaN(valor)) { alert('Preencha todos os campos.'); return; }
+
+    if (editingFilmeId) {
+      const f = filmes.find(x => x.id === editingFilmeId);
+      Object.assign(f, { nome, genero, duracao, class: cls, valor });
+      editingFilmeId = null;
+    } else {
+      filmes.push({ id: nextId.filme++, nome, genero, duracao, class: cls, valor });
+    }
+    closeModal('modal-filme');
+    renderFilmes();
+    document.getElementById('statFilmes').textContent = filmes.length;
+    // Reset form
+    ['f-nome','f-genero','f-duracao','f-valor'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('modal-filme-title').textContent = 'Novo Filme';
+  }
+
+  // ── SESSÃO CRUD ──────────────────────────────────────────────────────────────
+  let editingSessaoId = null;
+
+  function editSessao(id) {
+    const s = sessoes.find(x => x.id === id);
+    if (!s) return;
+    editingSessaoId = id;
+    document.getElementById('s-filme').value   = s.filmeId;
+    document.getElementById('s-data').value    = s.data;
+    document.getElementById('s-horario').value = s.horario;
+    document.getElementById('s-sala').value    = s.sala;
+    document.getElementById('modal-sessao-title').textContent = 'Editar Sessão';
+    openModal('sessao');
+  }
+
+  function saveSessao() {
+    const filmeId = parseInt(document.getElementById('s-filme').value);
+    const data    = document.getElementById('s-data').value;
+    const horario = document.getElementById('s-horario').value;
+    const sala    = document.getElementById('s-sala').value;
+    if (!data || !horario) { alert('Preencha todos os campos.'); return; }
+
+    if (editingSessaoId) {
+      const s = sessoes.find(x => x.id === editingSessaoId);
+      Object.assign(s, { filmeId, data, horario, sala });
+      editingSessaoId = null;
+    } else {
+      sessoes.push({ id: nextId.sessao++, filmeId, data, horario, sala, lugares: 150 });
+    }
+    closeModal('modal-sessao');
+    renderSessoes();
+    document.getElementById('modal-sessao-title').textContent = 'Nova Sessão';
+  }
+
+  // ── DELETE ───────────────────────────────────────────────────────────────────
+  let pendingDelete = null;
+
+  function askDelete(type, id) {
+    pendingDelete = { type, id };
+    const msgs = {
+      filme:   'Tem certeza que deseja excluir este filme? As sessões vinculadas também serão afetadas.',
+      sessao:  'Tem certeza que deseja excluir esta sessão?',
+      usuario: 'Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.',
+    };
+    document.getElementById('confirm-msg').textContent = msgs[type];
+    openModal('modal-confirm');
+  }
+
+  function confirmDelete() {
+    if (!pendingDelete) return;
+    const { type, id } = pendingDelete;
+    if (type === 'filme')   { filmes   = filmes.filter(x => x.id !== id);   renderFilmes();   document.getElementById('statFilmes').textContent = filmes.length; }
+    if (type === 'sessao')  { sessoes  = sessoes.filter(x => x.id !== id);  renderSessoes(); }
+    if (type === 'usuario' && isAdmin) { usuarios = usuarios.filter(x => x.id !== id); renderUsuarios(); document.getElementById('statUsuarios').textContent = usuarios.length; }
+    closeModal('modal-confirm');
+  }
+
+  // ── SEARCH ───────────────────────────────────────────────────────────────────
+  function filterTable(tableId, query) {
+    const q = query.toLowerCase();
+    document.querySelectorAll('#' + tableId + ' tbody tr').forEach(tr => {
+      tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
+
+  // ── AUTH ─────────────────────────────────────────────────────────────────────
+  function logout() { window.location.href = 'login.html'; }
+
+  function goHome() {
+    window.location.href = 'index.html?usuario=' + encodeURIComponent(usuario) + '&tipo=' + tipo;
+  }
+</script>
+</body>
+</html>
