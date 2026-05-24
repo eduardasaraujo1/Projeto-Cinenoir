@@ -368,35 +368,52 @@
     btn.classList.add('active');
   }
 
-  function handleLogin() {
+  async function handleLogin() {
     const user = document.getElementById('loginUser').value.trim();
     const pass = document.getElementById('loginPass').value;
     if (!user || !pass) { shake('panelLogin'); return; }
 
-    // TODO: POST /api/auth/login
-    let tipo = 'usuario';
-    if (user.toLowerCase() === 'admin') tipo = 'admin';
-    else if (user.toLowerCase() === 'func') tipo = 'funcionario';
-    else if (user.toLowerCase() === 'critico') tipo = 'critico';
-
-    if (tipo === 'admin' || tipo === 'funcionario') {
-      window.location.href = 'painel.html?usuario=' + encodeURIComponent(user) + '&tipo=' + tipo;
-    } else if (tipo === 'critico') {
-      window.location.href = 'critico.html?usuario=' + encodeURIComponent(user) + '&tipo=critico&origem=' + encodeURIComponent('Veículo do Crítico');
-    } else {
-      window.location.href = 'index.html?usuario=' + encodeURIComponent(user) + '&tipo=' + tipo;
-    }
+    try {
+      const res = await fetch('http://localhost:8080/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user, senha: pass })
+      });
+      if (!res.ok) { shake('panelLogin'); return; }
+      const u = await res.json();
+      const tipo = u.tipo || 'usuario';
+      if (tipo === 'admin' || tipo === 'funcionario') {
+        window.location.href = 'painel.html?usuario=' + encodeURIComponent(u.user) + '&tipo=' + tipo;
+      } else if (tipo === 'critico') {
+        window.location.href = 'critico.html?usuario=' + encodeURIComponent(u.user) + '&tipo=critico&origem=' + encodeURIComponent(u.origem || '');
+      } else {
+        window.location.href = 'index.html?usuario=' + encodeURIComponent(u.user) + '&tipo=' + tipo;
+      }
+    } catch (err) {
+      shake('panelLogin');
+  }
   }
 
-  function handleCadastro() {
+  async function handleCadastro() {
     const user  = document.getElementById('regUser').value.trim();
     const email = document.getElementById('regEmail').value.trim();
     const senha = document.getElementById('regSenha').value;
     const idade = document.getElementById('regIdade').value;
     const tipo  = document.querySelector('.type-btn.active')?.dataset.type || 'usuario';
     if (!user || !email || !senha || !idade) { shake('panelCadastro'); return; }
-    // TODO: POST /api/auth/cadastro
-    alert('Cadastro: ' + user + ' (' + tipo + ')');
+    try {
+      const res = await fetch('http://localhost:8080/api/auth/cadastro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user, email, senha, idade: parseInt(idade), tipo })
+      });
+      if (res.status === 409) { alert('Usuário já existe.'); shake('panelCadastro'); return; }
+      if (!res.ok) { shake('panelCadastro'); return; }
+      alert('Cadastro realizado! Faça login.');
+      window.location.href = 'login.html';
+    } catch (err) {
+      shake('panelCadastro');
+    }
   }
 
   function shake(id) {

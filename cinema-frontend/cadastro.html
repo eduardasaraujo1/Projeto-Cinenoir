@@ -765,7 +765,7 @@
   }
 
   // ── SUBMIT ────────────────────────────────────────────────────────────────
-  function submitForm() {
+  async function submitForm() {
     const tipo = document.querySelector('.type-card.active')?.dataset.type || 'usuario';
     const payload = {
       user: val('f-user'), email: val('f-email'), senha: val('f-senha'),
@@ -776,8 +776,16 @@
       cvv: val('f-cvv'), tipo,
       origem: tipo === 'critico' ? val('f-origem') : undefined,
     };
-    console.log('POST /api/auth/cadastro', payload);
-    // TODO: fetch('/api/auth/cadastro', { method: 'POST', body: JSON.stringify(payload) })
+      const res = await fetch('http://localhost:8080/api/auth/cadastro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        alert('Erro ao cadastrar: ' + err);
+        return;
+      }
     const redirUrl = 'index.html?usuario=' + encodeURIComponent(payload.user) + '&tipo=' + payload.tipo;
 
     // Show success

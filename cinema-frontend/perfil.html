@@ -327,6 +327,7 @@
 <nav>
   <a href="#" onclick="goBack()" class="logo">Cine<span>Noir</span></a>
   <a href="#" onclick="goBack()" class="nav-back">← Voltar</a>
+      <a href="login.html" onclick="localStorage.clear()" class="nav-back" style="margin-left:auto;color:var(--red)">Sair da conta →</a>
 </nav>
 
 <!-- MAIN -->
@@ -428,31 +429,8 @@
     <div class="info-card">
       <div class="card-head"><h3>Compras Recentes</h3></div>
       <div id="historicoList">
-        <!-- simulado — virá de GET /api/usuario/historico -->
-        <div class="historico-item">
-          <span class="hist-icon">🎟</span>
-          <div class="hist-info">
-            <p class="hist-filme">The Secret Agent</p>
-            <p class="hist-meta">22 Mai 2026 · 21:00 · Sala XD · Assento A7</p>
+            <p style="color:var(--muted);text-align:center;padding:2rem">Nenhuma compra realizada ainda.</p>
           </div>
-          <span class="hist-valor">R$ 36,40</span>
-        </div>
-        <div class="historico-item">
-          <span class="hist-icon">🎟</span>
-          <div class="hist-info">
-            <p class="hist-filme">Michael</p>
-            <p class="hist-meta">20 Mai 2026 · 18:30 · Sala 3D · Assento C12</p>
-          </div>
-          <span class="hist-valor">R$ 36,00</span>
-        </div>
-        <div class="historico-item" style="opacity:.4">
-          <span class="hist-icon">✕</span>
-          <div class="hist-info">
-            <p class="hist-filme">Obsessão <span class="badge badge-gray" style="margin-left:.5rem">Cancelado</span></p>
-            <p class="hist-meta">15 Mai 2026 · 16:00 · Sala Comum</p>
-          </div>
-          <span class="hist-valor" style="text-decoration:line-through">R$ 25,00</span>
-        </div>
       </div>
     </div>
   </div>
@@ -478,9 +456,9 @@
     <div class="info-card">
       <div class="card-head"><h3>Alterar Senha</h3></div>
       <div style="padding:1.5rem">
-        <div class="field"><label>Senha atual</label><input type="password" placeholder="••••••••" /></div>
+        <div class="field"><label>Senha atual</label><input type="password" id="senhaAtualPerf" placeholder="••••••••" /></div>
         <div class="field"><label>Nova senha</label><input type="password" id="novaSenhaPerf" placeholder="••••••••" /></div>
-        <div class="field"><label>Confirmar nova senha</label><input type="password" placeholder="••••••••" /></div>
+        <div class="field"><label>Confirmar nova senha</label><input type="password" id="confirmarSenhaPerf" placeholder="••••••••" /></div>
         <button class="btn-save" onclick="salvarSenha()">Salvar senha</button>
       </div>
     </div>
@@ -532,7 +510,7 @@
   }
 
   // ── POPULATE FIELDS ─────────────────────────────────────────────────────────
-  // TODO: replace with GET /api/usuario/{id}
+    fetch('http://localhost:8080/api/auth/usuario/' + usuario).then(r=>r.json()).then(u=>{document.getElementById('pUser').textContent=u.user;document.getElementById('pEmail').textContent=u.email;document.getElementById('pCpf').textContent=u.cpf||'';document.getElementById('pIdade').textContent=u.idade||'';document.getElementById('pSexo').textContent=u.sexo||'';document.getElementById('pNomeCartao').textContent=u.user;if(document.getElementById('pOrigem'))document.getElementById('pOrigem').textContent=u.origem||'';}).catch(e=>console.error(e));
   document.getElementById('pUser').textContent       = usuario;
   document.getElementById('pEmail').textContent      = usuario.toLowerCase() + '@email.com';
   document.getElementById('pCpf').textContent        = '•••.•••.•••-••';
@@ -612,10 +590,27 @@
     showToast('Cartão atualizado!');
   }
 
-  function salvarSenha() {
-    // TODO: PUT /api/usuario/senha
-    showToast('Senha alterada com sucesso!');
-  }
+    async function salvarSenha() {
+      const params = new URLSearchParams(window.location.search);
+      const usuario = params.get('usuario');
+      const senhaAtual = document.getElementById('senhaAtualPerf').value;
+      const novaSenha = document.getElementById('novaSenhaPerf').value;
+      const confirmar = document.getElementById('confirmarSenhaPerf').value;
+      if (!senhaAtual || !novaSenha || !confirmar) { showToast('Preencha todos os campos'); return; }
+      if (novaSenha !== confirmar) { showToast('As senhas nao coincidem'); return; }
+      const res = await fetch('http://localhost:8080/api/auth/alterar-senha', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: usuario, senhaAtual, novaSenha })
+      });
+      const msg = await res.text();
+      showToast(res.ok ? 'Senha alterada com sucesso!' : 'Erro: ' + msg);
+      if (res.ok) {
+        document.getElementById('senhaAtualPerf').value = '';
+        document.getElementById('novaSenhaPerf').value = '';
+        document.getElementById('confirmarSenhaPerf').value = '';
+      }
+    }
 
   function maskCartao(el) {
     let v = el.value.replace(/\D/g,'').slice(0,16);

@@ -18,6 +18,8 @@ public class Usuario {
     private String email;
     private String tipo;
     private String origem;
+    private String resetToken;
+    private String resetExpiry;
 
     public Usuario() {}
 
@@ -38,4 +40,8 @@ public class Usuario {
     public void setTipo(String tipo) { this.tipo = tipo; }
     public String getOrigem() { return origem; }
     public void setOrigem(String origem) { this.origem = origem; }
+    public String getResetToken() { return resetToken; }
+    public void setResetToken(String resetToken) { this.resetToken = resetToken; }
+    public String getResetExpiry() { return resetExpiry; }
+    public void setResetExpiry(String resetExpiry) { this.resetExpiry = resetExpiry; }
 }

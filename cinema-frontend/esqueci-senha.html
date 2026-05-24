@@ -363,29 +363,68 @@
     document.getElementById('step' + n).classList.add('active');
   }
 
-  function goStep2() {
+  let _emailRecuperacao = '';
+  let _codigoRecuperacao = '';
+
+  async function goStep2() {
     const email = document.getElementById('emailInput').value.trim();
-    if (!email || !email.includes('@')) { shake('step1'); return; }
-    document.getElementById('step2desc').textContent =
-      'Digite o código de 4 dígitos enviado para ' + email + '.';
-    showStep(2);
-    document.getElementById('otp0').focus();
-    startResendTimer();
+    if (!email) { shake('step1'); alert('Informe seu e-mail.'); return; }
+    const btn = document.querySelector('#step1 button');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+    try {
+      const res = await fetch('http://localhost:8080/api/auth/esqueci-senha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      if (res.ok) {
+        _emailRecuperacao = email;
+        showStep(2);
+        startResendTimer();
+      } else {
+        shake('step1');
+        alert('E-mail não encontrado.');
+      }
+    } catch(e) {
+      alert('Erro ao conectar com o servidor.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Enviar código';
+    }
   }
 
   function goStep3() {
-    const code = [0,1,2,3].map(i => document.getElementById('otp'+i).value).join('');
-    if (code.length < 4) { shake('step2'); return; }
+    const inputs = [document.getElementById('otp0'),document.getElementById('otp1'),document.getElementById('otp2'),document.getElementById('otp3')];
+    _codigoRecuperacao = Array.from(inputs).map(i => i.value).join('');
+    if (_codigoRecuperacao.length < 1) { shake('step2'); alert('Digite o código completo.'); return; }
     showStep(3);
     document.getElementById('novaSenha').focus();
   }
 
-  function goStep4() {
+  async function goStep4() {
     const nova    = document.getElementById('novaSenha').value;
     const confirm = document.getElementById('confirmSenha').value;
-    if (nova.length < 6)  { shake('step3'); alert('Senha deve ter ao menos 6 caracteres.'); return; }
-    if (nova !== confirm) { shake('step3'); alert('As senhas não coincidem.'); return; }
-    showStep(4);
+    if (nova.length < 6)   { shake('step3'); alert('Senha deve ter ao menos 6 caracteres.'); return; }
+    if (nova !== confirm)  { shake('step3'); alert('As senhas não coincidem.'); return; }
+    const btn = document.querySelector('#step3 button');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    try {
+      const res = await fetch('http://localhost:8080/api/auth/reset-senha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: _emailRecuperacao, codigo: _codigoRecuperacao, novaSenha: nova })
+      });
+      if (res.ok) {
+        showStep(4);
+      } else {
+        const msg = await res.text();
+        shake('step3');
+        alert(msg || 'Código inválido ou expirado.');
+      }
+    } catch(e) {
+      alert('Erro ao conectar com o servidor.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Redefinir senha';
+    }
   }
 
   function otpMove(el, idx) {
