@@ -418,22 +418,22 @@
         <div class="stat-card">
           <p class="stat-label">Filmes em Cartaz</p>
           <p class="stat-value" id="statFilmes">0</p>
-          <p class="stat-delta">↑ Temporada 2026</p>
+          
         </div>
         <div class="stat-card">
-          <p class="stat-label">Sessões Hoje</p>
+          <p class="stat-label">Sessões</p>
           <p class="stat-value" id="statSessoes">0</p>
-          <p class="stat-delta">↑ 3 salas ativas</p>
+          
         </div>
         <div class="stat-card">
           <p class="stat-label">Usuários Cadastrados</p>
           <p class="stat-value" id="statUsuarios">—</p>
-          <p class="stat-delta" id="statUsuariosSub">—</p>
+          
         </div>
         <div class="stat-card">
           <p class="stat-label">Salas</p>
           <p class="stat-value">4</p>
-          <p class="stat-delta">Comum, 3D, XD, XD/3D</p>
+          
         </div>
       </div>
 
@@ -468,7 +468,7 @@
       <div class="table-wrap">
         <table id="tbl-filmes">
           <thead><tr>
-            <th>Nome</th><th>Gênero</th><th>Duração</th><th>Class.</th><th>Valor Base</th><th>Ações</th>
+            <th>Nome</th><th>Gênero</th><th>Duração</th><th>Classificação</th><th>Valor Base</th><th>Ações</th>
           </tr></thead>
           <tbody id="tbody-filmes"></tbody>
         </table>
@@ -725,7 +725,7 @@ function renderFilmes() {
     <td>${f.nome}</td>
     <td>${f.genero}</td>
     <td>${f.duracao}</td>
-    <td><span class="badge badge-gray">${f.classe}</span></td>
+    <td><span class="badge badge-gray">${f.classificacao || "—"}</span></td>
     <td>R$ ${(f.valor||0).toFixed(2)}</td>
     <td><div class="action-btns">
       <button class="btn-edit" onclick="editFilme(${f.id})">Editar</button>
@@ -763,7 +763,7 @@ function editFilme(id) {
   document.getElementById('f-genero').value  = f.genero || '';
   document.getElementById('f-duracao').value = f.duracao || '';
   document.getElementById('f-valor').value   = f.valor || '';
-  document.getElementById('f-class').value   = f.classe || 'Livre';
+  document.getElementById('f-class').value   = f.classificacao || 'Livre';
   document.getElementById('f-diretor').value = f.diretor || '';
   document.getElementById('f-elenco').value  = f.elenco || '';
   document.getElementById('f-poster').value  = f.posterUrl || '';
