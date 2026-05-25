@@ -10,8 +10,8 @@ Sistema de cinema desenvolvido com **Spring Boot** (backend) e **HTML/CSS/JS pur
 - Java 17
 - Spring Boot 3.5
 - Spring Data JPA + Hibernate
-- SQLite (via `sqlite-jdbc` + `hibernate-community-dialects`)
-- Maven
+- SQLite
+- Maven Wrapper (não exige Maven instalado)
 
 **Frontend**
 - HTML5, CSS3, JavaScript puro (sem frameworks)
@@ -21,53 +21,60 @@ Sistema de cinema desenvolvido com **Spring Boot** (backend) e **HTML/CSS/JS pur
 
 ## Pré-requisitos
 
-| Ferramenta | Versão mínima | Como verificar |
+Apenas o **Java 17** e o **Python** precisam estar instalados. O Maven já está embutido no projeto via Maven Wrapper.
+
+| Ferramenta | Versão mínima | Download |
 |---|---|---|
-| Java (JDK) | 17 | `java -version` |
-| Maven | 3.8 | `mvn -version` |
-| Python | 3.x | `python3 --version` (Linux/Mac) ou `python --version` (Windows) |
+| Java (JDK) | 17 | https://www.oracle.com/java/technologies/downloads/#java17 |
+| Python | 3.x | https://www.python.org/downloads/ |
 
-> O banco de dados SQLite já está incluído no projeto (`cinema-backend/cinema.db`) — não é necessário instalar nada adicional.
+Após instalar, verifique no terminal:
+```
+java -version
+python --version
+```
 
-**Links para download:**
-- Java 17: https://www.oracle.com/java/technologies/downloads/#java17
-- Maven: https://maven.apache.org/download.cgi
-- Python: https://www.python.org/downloads/
+> O banco de dados SQLite já está incluído no projeto (`cinema-backend/cinema.db`) com dados de exemplo — não é necessário configurar nada.
 
 ---
 
 ## Como Rodar
 
-O projeto precisa de **dois processos rodando ao mesmo tempo**: o backend (Spring Boot) e o frontend (servidor Python). Abra dois terminais separados.
+O projeto precisa de **dois terminais abertos ao mesmo tempo**: um para o backend e outro para o frontend.
 
 ---
 
 ### 🪟 Windows
 
+> ⚠️ Use o **Prompt de Comando (cmd.exe)** — não o PowerShell.
+
 **Terminal 1 — Backend:**
 
-Abra o Prompt de Comando ou PowerShell na pasta do projeto e execute:
+Abra o Prompt de Comando e execute:
 
 ```cmd
+git clone https://github.com/eduardasaraujo1/Projeto-Cinenoir.git
+cd Projeto-Cinenoir
 cd cinema-backend
 mvnw.cmd spring-boot:run
 ```
 
-> Use `mvnw.cmd` em vez de `mvn` — ele já vem incluído no projeto e não exige Maven instalado.
+Na primeira execução o Maven baixa as dependências automaticamente — pode levar alguns minutos. Aguarde aparecer:
 
-Aguarde aparecer no log:
 ```
 Started CinemaApplication in X.XXX seconds
 ```
 
 **Terminal 2 — Frontend:**
 
+Abra um **novo** Prompt de Comando e execute:
+
 ```cmd
-cd cinema-frontend
+cd C:\Users\SEU_USUARIO\Projeto-Cinenoir\cinema-frontend
 python -m http.server 3000
 ```
 
-> Se o comando `python` não funcionar, tente `python3 -m http.server 3000`.
+> Substitua `SEU_USUARIO` pelo seu nome de usuário do Windows.
 
 Acesse **http://localhost:3000** no navegador.
 
@@ -78,11 +85,12 @@ Acesse **http://localhost:3000** no navegador.
 **Terminal 1 — Backend:**
 
 ```bash
-cd cinema-backend
+git clone https://github.com/eduardasaraujo1/Projeto-Cinenoir.git
+cd Projeto-Cinenoir/cinema-backend
 ./mvnw spring-boot:run
 ```
 
-Aguarde aparecer no log:
+Aguarde:
 ```
 Started CinemaApplication in X.XXX seconds
 ```
@@ -90,22 +98,22 @@ Started CinemaApplication in X.XXX seconds
 **Terminal 2 — Frontend:**
 
 ```bash
-cd cinema-frontend
+cd Projeto-Cinenoir/cinema-frontend
 python3 -m http.server 3000
 ```
 
 Acesse **http://localhost:3000** no navegador.
 
-Para encerrar tudo de uma vez:
-
-```bash
-pkill -f "spring-boot" && pkill -f "http.server"
-```
-
-Ou use o script incluído no projeto:
+Ou use o script incluído no projeto para subir tudo de uma vez:
 
 ```bash
 bash iniciar.sh
+```
+
+Para encerrar:
+
+```bash
+pkill -f "spring-boot" && pkill -f "http.server"
 ```
 
 ---
@@ -115,11 +123,12 @@ bash iniciar.sh
 **Terminal 1 — Backend:**
 
 ```bash
-cd cinema-backend
+git clone https://github.com/eduardasaraujo1/Projeto-Cinenoir.git
+cd Projeto-Cinenoir/cinema-backend
 ./mvnw spring-boot:run
 ```
 
-Aguarde aparecer no log:
+Aguarde:
 ```
 Started CinemaApplication in X.XXX seconds
 ```
@@ -127,7 +136,7 @@ Started CinemaApplication in X.XXX seconds
 **Terminal 2 — Frontend:**
 
 ```bash
-cd cinema-frontend
+cd Projeto-Cinenoir/cinema-frontend
 python3 -m http.server 3000
 ```
 
@@ -135,11 +144,10 @@ Acesse **http://localhost:3000** no navegador.
 
 ---
 
-### ⚠️ Observações importantes
+### ⚠️ Observações
 
-- Na **primeira execução**, o Maven baixa todas as dependências automaticamente — isso pode levar alguns minutos dependendo da conexão com a internet.
-- O backend **precisa estar rodando** antes de abrir o frontend no navegador.
-- Não feche o terminal do backend enquanto estiver usando o sistema.
+- Na **primeira execução** o Maven baixa todas as dependências — requer internet e pode demorar.
+- O backend **precisa estar rodando** antes de acessar o frontend no navegador.
 - As portas **8080** (backend) e **3000** (frontend) precisam estar livres.
 
 ---
@@ -148,32 +156,34 @@ Acesse **http://localhost:3000** no navegador.
 
 ```
 Projeto-Cinenoir/
-├── iniciar.sh               # Script para subir tudo de uma vez (Linux/Mac)
+├── iniciar.sh                        # Sobe backend e frontend de uma vez (Linux/Mac)
 ├── README.md
-├── cinema-backend/          # API REST Spring Boot
+├── cinema-backend/                   # API REST Spring Boot
+│   ├── .mvn/wrapper/
+│   │   └── maven-wrapper.properties  # Maven Wrapper — não exige Maven instalado
 │   ├── src/main/java/br/cinenoir/
-│   │   ├── controller/      # AuthController, FilmeController, SessaoController, CriticaController
-│   │   ├── model/           # Filme, Sessao, Usuario, Critica, Bilhete
-│   │   ├── repository/      # Interfaces JPA
+│   │   ├── controller/               # AuthController, FilmeController, SessaoController, CriticaController
+│   │   ├── model/                    # Filme, Sessao, Usuario, Critica, Bilhete
+│   │   ├── repository/               # Interfaces JPA
 │   │   └── CinemaApplication.java
 │   ├── src/main/resources/
 │   │   └── application.properties
-│   ├── cinema.db            # Banco SQLite com dados de exemplo
-│   ├── mvnw                 # Maven Wrapper (Linux/Mac)
-│   ├── mvnw.cmd             # Maven Wrapper (Windows)
+│   ├── cinema.db                     # Banco SQLite com dados de exemplo
+│   ├── mvnw                          # Maven Wrapper (Linux/Mac)
+│   ├── mvnw.cmd                      # Maven Wrapper (Windows)
 │   └── pom.xml
-└── cinema-frontend/         # Páginas HTML
-    ├── index.html           # Home com programação e filmes em cartaz
-    ├── filmes.html          # Detalhes do filme com críticas
-    ├── assentos.html        # Seleção de assentos
-    ├── carrinho.html        # Carrinho de compras
-    ├── login.html           # Login
-    ├── cadastro.html        # Cadastro em 4 passos
-    ├── perfil.html          # Perfil do usuário
-    ├── esqueci-senha.html   # Recuperação de senha
-    ├── critico.html         # Painel do crítico
-    ├── painel.html          # Painel admin/funcionário
-    └── img/                 # Imagens dos filmes
+└── cinema-frontend/                  # Páginas HTML
+    ├── index.html                    # Home com programação e filmes em cartaz
+    ├── filmes.html                   # Detalhes do filme com críticas
+    ├── assentos.html                 # Seleção de assentos
+    ├── carrinho.html                 # Carrinho de compras
+    ├── login.html                    # Login
+    ├── cadastro.html                 # Cadastro em 4 passos
+    ├── perfil.html                   # Perfil do usuário
+    ├── esqueci-senha.html            # Recuperação de senha
+    ├── critico.html                  # Painel do crítico
+    ├── painel.html                   # Painel admin/funcionário
+    └── img/                          # Imagens dos filmes
 ```
 
 ---
@@ -202,7 +212,7 @@ Projeto-Cinenoir/
 
 ### Autenticação
 
-- **Login (`login.html`)** — autenticação via API
+- **Login (`login.html`)** — autenticação via `POST /api/auth/login`
 - **Cadastro (`cadastro.html`)** — fluxo em 4 passos com validação
 - **Recuperação de senha (`esqueci-senha.html`)** — fluxo completo com token
 
@@ -215,15 +225,16 @@ Projeto-Cinenoir/
 ### Painel do Crítico (`critico.html`)
 
 - Lista todos os filmes em cartaz com nota média
-- Atribuição de nota (1–10) e escrita de crítica
+- Atribuição de nota (1–10) e escrita de crítica (mínimo 20 caracteres)
 - Recálculo automático da média do filme ao publicar ou excluir crítica
-- Aba "Minhas Críticas" com histórico persistido
+- Aba "Minhas Críticas" com histórico persistido no banco
 
 ### Painel Admin/Funcionário (`painel.html`)
 
 - **Dashboard** — visão geral do sistema
-- **Filmes** — CRUD completo
+- **Filmes** — CRUD completo (nome, gênero, duração, classificação, diretor, elenco, poster, cena de fundo, valor)
 - **Sessões** — CRUD com data, horário e tipo de sala
+- **Salas** — visualização dos tipos disponíveis (Comum, 3D, XD, XD/3D)
 - **Usuários** — listagem e exclusão *(somente admin)*
 
 ---
