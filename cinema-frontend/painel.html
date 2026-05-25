@@ -654,6 +654,7 @@ const params = new URLSearchParams(location.search);
 const usuario = params.get('usuario') || '';
 const tipo    = params.get('tipo')    || 'usuario';
 const isAdmin = tipo === 'admin';
+const isFuncionario = tipo === 'funcionario';
 
 let filmes   = [];
 let sessoes  = [];
