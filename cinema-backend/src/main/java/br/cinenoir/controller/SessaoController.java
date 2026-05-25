@@ -42,6 +42,26 @@ public class SessaoController {
         }).orElse(new ArrayList<>());
     }
 
+
+    @PatchMapping("/{id}/ocupar")
+    public ResponseEntity<Sessao> ocupar(@PathVariable Long id, @RequestBody java.util.Map<String, Object> body) {
+        return repository.findById(id).map(sessao -> {
+            Object assentosObj = body.get("assentos");
+            if (assentosObj instanceof java.util.List) {
+                java.util.List<?> lista = (java.util.List<?>) assentosObj;
+                String atual = sessao.getAssentosOcupados();
+                java.util.Set<String> ocupados = new java.util.LinkedHashSet<>();
+                if (atual != null && !atual.isBlank()) {
+                    for (String s : atual.split(",")) ocupados.add(s.trim());
+                }
+                for (Object a : lista) ocupados.add(a.toString().trim());
+                sessao.setAssentosOcupados(String.join(",", ocupados));
+                return ResponseEntity.ok(repository.save(sessao));
+            }
+            return ResponseEntity.badRequest().<Sessao>build();
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping
     public Sessao criar(@RequestBody Sessao sessao) {
         return repository.save(sessao);

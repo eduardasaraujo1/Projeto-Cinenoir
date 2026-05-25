@@ -47,6 +47,10 @@ public class FilmeController {
             f.setGenero(dados.getGenero());
             f.setPosterUrl(dados.getPosterUrl());
             f.setEmCartaz(dados.isEmCartaz());
+            f.setBackdropUrl(dados.getBackdropUrl());
+            f.setDiretor(dados.getDiretor());
+            f.setElenco(dados.getElenco());
+            f.setClassificacao(dados.getClassificacao());
             return ResponseEntity.ok(repository.save(f));
         }).orElse(ResponseEntity.notFound().build());
     }

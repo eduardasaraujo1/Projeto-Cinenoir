@@ -15,6 +15,7 @@ public class Sessao {
     private boolean encerrada;
     private boolean emCartaz;
     private String assentosOcupados;
+    private String data;
 
     @ManyToOne
     @JoinColumn(name = "filme_id")
@@ -33,6 +34,8 @@ public class Sessao {
     public void setEmCartaz(boolean emCartaz) { this.emCartaz = emCartaz; }
     public String getAssentosOcupados() { return assentosOcupados; }
     public void setAssentosOcupados(String assentosOcupados) { this.assentosOcupados = assentosOcupados; }
+    public String getData() { return data; }
+    public void setData(String data) { this.data = data; }
     public Filme getFilme() { return filme; }
     public void setFilme(Filme filme) { this.filme = filme; }
 }

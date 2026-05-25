@@ -767,7 +767,7 @@ function editFilme(id) {
   document.getElementById('f-diretor').value = f.diretor || '';
   document.getElementById('f-elenco').value  = f.elenco || '';
   document.getElementById('f-poster').value  = f.posterUrl || '';
-  document.getElementById('f-cena').value    = f.cenaUrl || '';
+  document.getElementById('f-cena').value    = f.backdropUrl || '';
   document.getElementById('f-sinopse').value = f.sinopse || '';
   openModal('modal-filme');
 }
@@ -784,7 +784,7 @@ async function saveFilme() {
     diretor:  document.getElementById('f-diretor').value.trim(),
     elenco:   document.getElementById('f-elenco').value.trim(),
     posterUrl: document.getElementById('f-poster').value.trim(),
-    cenaUrl:  document.getElementById('f-cena').value.trim(),
+    backdropUrl: document.getElementById('f-cena').value.trim(),
     nota:     filme_atual.nota || 0,
     quantidadeCriticos: filme_atual.quantidadeCriticos || 0,
     emCartaz: true,

@@ -19,6 +19,12 @@ public class Filme {
     private String genero;
     private String posterUrl;
     private boolean emCartaz;
+    @Column(name = "cena_url")
+    private String backdropUrl;
+    private String diretor;
+    private String elenco;
+    @Column(name = "classe")
+    private String classificacao;
 
     public Filme() {}
 
@@ -39,6 +45,14 @@ public class Filme {
     public void setGenero(String genero) { this.genero = genero; }
     public String getPosterUrl() { return posterUrl; }
     public void setPosterUrl(String posterUrl) { this.posterUrl = posterUrl; }
+    public String getBackdropUrl() { return backdropUrl; }
+    public void setBackdropUrl(String backdropUrl) { this.backdropUrl = backdropUrl; }
+    public String getDiretor() { return diretor; }
+    public void setDiretor(String diretor) { this.diretor = diretor; }
+    public String getElenco() { return elenco; }
+    public void setElenco(String elenco) { this.elenco = elenco; }
+    public String getClassificacao() { return classificacao; }
+    public void setClassificacao(String classificacao) { this.classificacao = classificacao; }
     public boolean isEmCartaz() { return emCartaz; }
     public void setEmCartaz(boolean emCartaz) { this.emCartaz = emCartaz; }
 }
