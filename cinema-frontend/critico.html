@@ -349,6 +349,24 @@
   let selectedFilmeId = null;
   let selectedNota    = 0;
 
+  async function carregarFilmes() {
+    try {
+      const res = await fetch('http://localhost:8080/api/filmes/cartaz');
+      const filmes = await res.json();
+      FILMES.length = 0;
+      filmes.forEach(f => FILMES.push({
+        id:           f.id,
+        nome:         f.nome,
+        genero:       f.genero,
+        duracao:      f.duracao + 'min',
+        poster:       f.posterUrl,
+        nota:         f.nota,
+        qtdCriticos:  f.quantidadeCriticos
+      }));
+      renderFilmsList();
+    } catch(e) { console.error('Erro ao carregar filmes', e); }
+  }
+
   // ── RENDER FILMS LIST ────────────────────────────────────────────────────────
   function renderFilmsList() {
     const container = document.getElementById('filmsList');
@@ -464,7 +482,13 @@
     if (existing >= 0) minhasAvaliacoes[existing] = avaliacao;
     else               minhasAvaliacoes.push(avaliacao);
 
-    // TODO: POST /api/critico/avaliar { filmeId, nota, mensagem }
+    fetch(`http://localhost:8080/api/criticas/filme/${selectedFilmeId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome: usuario, mensagem, nota: selectedNota, origem })
+    }).then(r => r.json()).then(critica => {
+      carregarFilmes();
+    }).catch(e => console.error("Erro ao publicar critica", e));
 
     cancelarAvaliar();
     renderFilmsList();
@@ -506,6 +530,7 @@
           <div style="text-align:right">
             <p class="critica-nota-badge">${a.nota}<span style="font-size:.9rem;color:var(--muted)">/10</span></p>
             <div>${'★'.repeat(Math.round(a.nota/2))}${'☆'.repeat(5-Math.round(a.nota/2))}</div>
+            <button onclick="excluirCritica(${a.id})" style="margin-top:.4rem;font-size:.6rem;background:none;border:1px solid rgba(204,34,34,.4);color:var(--red);padding:.2rem .5rem;cursor:pointer;border-radius:2px;">EXCLUIR</button>
           </div>
         </div>
         <div class="critica-body">
@@ -513,6 +538,39 @@
           <p class="critica-meta">— ${a.nome} · ${a.origem}</p>
         </div>
       </div>`).join('');
+  }
+
+  async function excluirCritica(id) {
+    if (!confirm('Excluir esta crítica?')) return;
+    try {
+      await fetch(`http://localhost:8080/api/criticas/${id}`, { method: 'DELETE' });
+      minhasAvaliacoes = minhasAvaliacoes.filter(a => a.id !== id);
+      await carregarFilmes();
+      renderMinhasCriticas();
+      updateStats();
+      showToast('Crítica excluída.');
+    } catch(e) { showToast('Erro ao excluir crítica.', true); }
+  }
+
+  async function carregarMinhasCriticas() {
+    try {
+      const res = await fetch('http://localhost:8080/api/criticas/usuario/' + usuario);
+      if (!res.ok) return;
+      const criticas = await res.json();
+      minhasAvaliacoes = criticas.map(c => ({
+        id:       c.id,
+        filmeId:  c.filme.id,
+        filme:    c.filme.nome,
+        genero:   c.filme.genero,
+        nota:     c.nota,
+        mensagem: c.mensagem,
+        nome:     c.nome,
+        origem:   c.origem,
+        data:     'anterior'
+      }));
+      renderMinhasCriticas();
+      updateStats();
+    } catch(e) { console.error('Erro ao carregar minhas criticas', e); }
   }
 
   // ── STATS ────────────────────────────────────────────────────────────────────
@@ -553,8 +611,8 @@
   }
 
   // ── INIT ─────────────────────────────────────────────────────────────────────
-  renderFilmsList();
-  renderMinhasCriticas();
+  carregarFilmes();
+  carregarMinhasCriticas();
 </script>
 
 <style>
