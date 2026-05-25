@@ -408,15 +408,15 @@
     <div class="info-card">
       <div class="card-head"><h3>Cupons Disponíveis</h3></div>
       <div style="padding:1.25rem 1.5rem; display:flex; gap:.75rem; flex-wrap:wrap;">
-        <div style="border:1px dashed rgba(204,34,34,.4);border-radius:4px;padding:.75rem 1.25rem;text-align:center;">
+        <div data-cupom="PROMO5" style="border:1px dashed rgba(204,34,34,.4);border-radius:4px;padding:.75rem 1.25rem;text-align:center;">
           <p style="font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:.25rem;">PROMO5</p>
           <p style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--red)">5% off</p>
         </div>
-        <div style="border:1px dashed rgba(204,34,34,.4);border-radius:4px;padding:.75rem 1.25rem;text-align:center;">
+        <div data-cupom="PROMO10" style="border:1px dashed rgba(204,34,34,.4);border-radius:4px;padding:.75rem 1.25rem;text-align:center;">
           <p style="font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:.25rem;">PROMO10</p>
           <p style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--red)">10% off</p>
         </div>
-        <div style="border:1px dashed rgba(204,34,34,.4);border-radius:4px;padding:.75rem 1.25rem;text-align:center;">
+        <div data-cupom="PROMO20" style="border:1px dashed rgba(204,34,34,.4);border-radius:4px;padding:.75rem 1.25rem;text-align:center;">
           <p style="font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:.25rem;">PROMO20</p>
           <p style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--red)">20% off</p>
         </div>
@@ -526,6 +526,8 @@
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.getElementById('panel-' + name).classList.add('active');
     event.currentTarget.classList.add('active');
+    if (name === 'historico') renderHistorico();
+    if (name === 'pagamento') renderCuponsDisponiveis();
   }
 
   // ── NAVIGATION ───────────────────────────────────────────────────────────────
@@ -623,6 +625,45 @@
     t.className = 'toast'; t.textContent = '✓ ' + msg;
     document.body.appendChild(t);
     setTimeout(() => t.remove(), 3000);
+  }
+
+
+  function renderHistorico() {
+    const usuario = new URLSearchParams(window.location.search).get('usuario') || '';
+    const hist = JSON.parse(localStorage.getItem('historico_' + usuario) || '[]');
+    const el = document.getElementById('historicoList');
+    if (!el) return;
+    if (!hist.length) {
+      el.innerHTML = '<p style="color:var(--muted);text-align:center;padding:2rem">Nenhuma compra realizada ainda.</p>';
+      return;
+    }
+    el.innerHTML = hist.map(c => `
+      <div class="historico-item" style="padding:1rem;border:1px solid var(--muted2);border-radius:4px;margin-bottom:.75rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+          <span style="font-family:'Bebas Neue',sans-serif;letter-spacing:.1em;color:var(--red);font-size:1rem">${c.codigo}</span>
+          <span style="font-size:.7rem;color:var(--muted)">${c.data}</span>
+        </div>
+        ${c.bilhetes.map(b => `
+          <div style="font-size:.8rem;color:var(--cream);margin-bottom:.2rem">
+            🎬 <strong>${b.filme}</strong> — ${b.horario} · ${b.data}
+            <span style="color:var(--muted)"> | Assentos: ${(b.assentos||[]).join(', ')}</span>
+          </div>
+        `).join('')}
+        ${c.produtos && c.produtos.length ? `<div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">🍿 ${c.produtos.map(p=>p.qty+'x '+p.nome).join(', ')}</div>` : ''}
+        <div style="display:flex;justify-content:space-between;margin-top:.5rem">
+          ${c.cupom ? `<span style="font-size:.7rem;color:#2ecc71">Cupom: -${c.cupom}</span>` : '<span></span>'}
+          <span style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--cream)">R$ ${Number(c.total).toFixed(2).replace('.',',')}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderCuponsDisponiveis() {
+    const usuario = new URLSearchParams(window.location.search).get('usuario') || '';
+    const usados = JSON.parse(localStorage.getItem('cuponsUsados_' + usuario) || '[]');
+    document.querySelectorAll('[data-cupom]').forEach(el => {
+      if (usados.includes(el.dataset.cupom)) el.style.display = 'none';
+    });
   }
 
 </script>

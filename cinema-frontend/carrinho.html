@@ -448,10 +448,13 @@ function renderProdutos() {
 // ── CUPOM ────────────────────────────────────────────────────────────────────
 function aplicarCupom() {
   if (cupomUsado) return;
+    const _usados = JSON.parse(localStorage.getItem('cuponsUsados_' + (usuario || 'guest')) || '[]');
+    if (_usados.includes(document.getElementById('cupomInput').value.trim().toUpperCase())) { showToast('Cupom j\u00e1 utilizado anteriormente.', true); return; }
   const code = document.getElementById('cupomInput').value.trim().toUpperCase();
   if (CUPONS[code] !== undefined) {
     cupomDesconto = CUPONS[code];
     cupomUsado    = true;
+  window._cupomCodigo = code;
     document.getElementById('cupomSection').style.display = 'none';
     document.getElementById('cupomAplicado').style.display = 'block';
     document.getElementById('cupomAplicado').textContent = `✓ Cupom ${code} aplicado — ${cupomDesconto}% de desconto`;
@@ -505,11 +508,54 @@ function finalizar() {
   const filmes = [...new Set(bilhetes.map(b => b.filme))].join(', ');
   const assentos = bilhetes.flatMap(b => b.assentos || []).join(', ');
 
+  // 1. PATCH assentos ocupados no backend
+  const sessaoIds = [...new Set(bilhetes.map(b => b.sessaoId).filter(Boolean))];
+  const assentosOcupar = bilhetes.flatMap(b => b.assentos || []);
+  sessaoIds.forEach(id => {
+    fetch('http://localhost:8080/api/sessoes/' + id + '/ocupar', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ assentos: assentosOcupar })
+    }).catch(e => console.warn('PATCH falhou:', e));
+  });
+
+  // 2. Salvar histórico no localStorage
+  const cupomUsadoCod = window.cupomCodigo || null;
+  const totalFator = 1 - cupomDesconto / 100;
+  const totalBilhetes = bilhetes.reduce((s, b) => s + b.valorTotal, 0);
+  const totalProdutos = Object.entries(produtosCarrinho).reduce((s, [k, q]) => s + (PRODUTOS[k]?.preco || 0) * q, 0);
+  const totalFinal = parseFloat(((totalBilhetes + totalProdutos) * totalFator).toFixed(2));
+
+  const compra = {
+    codigo: code,
+    data: new Date().toLocaleDateString('pt-BR'),
+    filme: filmes,
+    assentos: assentos,
+    cupom: cupomUsadoCod,
+    total: totalFinal,
+    bilhetes: bilhetes,
+    produtos: Object.entries(produtosCarrinho)
+      .filter(([,q]) => q > 0)
+      .map(([k, q]) => ({ nome: PRODUTOS[k]?.nome || k, qty: q, preco: PRODUTOS[k]?.preco || 0 }))
+  };
+  const chave = 'historico_' + (usuario || 'guest');
+  const hist = JSON.parse(localStorage.getItem(chave) || '[]');
+  hist.unshift(compra);
+  localStorage.setItem(chave, JSON.stringify(hist));
+
+  // 3. Remover cupom usado do localStorage
+  if (cupomUsadoCod) {
+    const chaveCupons = 'cuponsUsados_' + (usuario || 'guest');
+    const usados = JSON.parse(localStorage.getItem(chaveCupons) || '[]');
+    if (!usados.includes(cupomUsadoCod)) usados.push(cupomUsadoCod);
+    localStorage.setItem(chaveCupons, JSON.stringify(usados));
+  }
+
+  // 4. Mostrar overlay de sucesso
   document.getElementById('successCode').textContent = code;
   document.getElementById('successSub').innerHTML =
-    `${filmes}<br>Assentos: ${assentos || '—'}<br>Aproveite o filme!`;
+    `${filmes}<br>Assentos: ${assentos || '-'}<br>Aproveite o filme!`;
   document.getElementById('successOverlay').classList.add('open');
-  // TODO: POST /api/compra/finalizar { bilhetes, produtos, cupom, valorTotal }
 }
 
 // ── CANCELAR: Compra.cancelar() ──────────────────────────────────────────────

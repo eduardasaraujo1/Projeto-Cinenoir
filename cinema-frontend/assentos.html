@@ -249,7 +249,7 @@
       <div class="price-total"><span>Total</span><span id="pTotal">R$ 0,00</span></div>
     </div>
 
-    <button class="btn-confirmar" id="btnConfirmar" onclick="openConfirm()" disabled>Confirmar Compra →</button>
+    <button class="btn-confirmar" id="btnConfirmar" >Confirmar Compra →</button>
   </div>
 </div>
 
@@ -260,7 +260,7 @@
     <div class="modal-body" id="confirmBody"></div>
     <div class="modal-foot" id="confirmFoot">
       <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-      <button class="btn-pay" onclick="confirmarCompra()">Pagar →</button>
+      <button class="btn-pay" onclick="window.confirmarCompra()">Pagar →</button>
     </div>
   </div>
 </div>
@@ -328,6 +328,8 @@ fetch(`http://localhost:8080/api/sessoes/filme/${filmeId}`)
     document.getElementById('sessionFilme').textContent = 'Erro ao carregar sessão';
   });
 
+
+window._openConfirm = null; window._confirmarCompra = null;
 function initPage() {
 
 // ── INIT HEADER ─────────────────────────────────────────────────────────────
@@ -413,66 +415,47 @@ function updateSummary() {
 }
 
 // ── CONFIRM ──────────────────────────────────────────────────────────────────
-function openConfirm() {
+document.getElementById("btnConfirmar").addEventListener("click", function() { window.openConfirm(); });
+window.openConfirm = function openConfirm() {
   if (!usuario) { window.location.href = 'login.html'; return; }
   if (selectedSeats.size === 0) return;
-
   const n = selectedSeats.size;
   const seats = [...selectedSeats].sort().map(k => {
-    const [r,c] = k.split('-').map(Number); return `${LETRAS[r]}${c+1}`;
+    const [r,c] = k.split('-').map(Number); return LETRAS[r]+(c+1);
   }).join(', ');
   const precoFinal = filme.valor * salaInfo.mult * (1 - descPct/100);
   const total = precoFinal * n;
-
-  document.getElementById('confirmBody').innerHTML = `
-    <div class="confirm-row"><span>Filme</span><span>${filme.nome}</span></div>
-    <div class="confirm-row"><span>Data/Horário</span><span>${data} · ${horario}</span></div>
-    <div class="confirm-row"><span>Sala</span><span>${salaInfo.label}</span></div>
-    <div class="confirm-row"><span>Assentos</span><span>${seats}</span></div>
-    <div class="confirm-row"><span>Qtd.</span><span>${n} ingresso(s)</span></div>
-    ${descPct > 0 ? `<div class="confirm-row"><span>Desconto</span><span style="color:#2ecc71">-${descPct}%</span></div>` : ''}
-    <div class="confirm-total"><span>Total</span><span>${fmt(total)}</span></div>`;
+  document.getElementById('confirmBody').innerHTML =
+    '<div class="confirm-row"><span>Filme</span><span>'+filme.nome+'</span></div>'+
+    '<div class="confirm-row"><span>Sessao</span><span>'+data+' · '+horario+'</span></div>'+
+    '<div class="confirm-row"><span>Sala</span><span>'+salaInfo.label+'</span></div>'+
+    '<div class="confirm-row"><span>Assentos</span><span>'+seats+'</span></div>'+
+    '<div class="confirm-row"><span>Qtd.</span><span>'+n+' ingresso(s)</span></div>'+
+    '<div class="confirm-total"><span>Total</span><span>'+fmt(total)+'</span></div>';
   document.getElementById('modalOverlay').classList.add('open');
 }
-
-function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
-
-function confirmarCompra() {
+window.confirmarCompra = function confirmarCompra() {
   const seatLabels = [...selectedSeats].sort().map(k => {
-    const [r,c] = k.split('-').map(Number); return `${LETRAS[r]}${c+1}`;
+    const [r,c] = k.split('-').map(Number); return LETRAS[r]+(c+1);
   });
-  const code = 'CN' + Date.now().toString(36).toUpperCase().slice(-6);
-  const precoUnit  = filme.valor * salaInfo.mult * (1 - descPct/100);
+  const precoUnit = filme.valor * salaInfo.mult * (1 - descPct/100);
   const bilhete = {
-    filmeId, filme: filme.nome,
-    horario, sala, salaLabel: `${salaInfo.label} (×${salaInfo.mult})`,
-    data, assentos: seatLabels,
+    filmeId: filmeId, sessaoId: sessaoId, filme: filme.nome,
+    horario: horario, sala: sala, salaLabel: salaInfo.label+' (x'+salaInfo.mult+')',
+    data: data, assentos: seatLabels,
     valorUnit: precoUnit,
     valorTotal: parseFloat((precoUnit * seatLabels.length).toFixed(2))
   };
-  const carrinhoUrl = `carrinho.html?usuario=${encodeURIComponent(usuario)}&tipo=${tipo}&bilhetes=${encodeURIComponent(JSON.stringify([bilhete]))}`;
-
-  // Mark seats occupied
-  selectedSeats.forEach(key => {
+  const carrinhoUrl = 'carrinho.html?usuario='+encodeURIComponent(usuario)+'&tipo='+tipo+'&bilhetes='+encodeURIComponent(JSON.stringify([bilhete]));
+  selectedSeats.forEach(function(key) {
     occupied.add(key);
-    const [r,c] = key.split('-').map(Number);
-    const el = document.querySelector(`.seat[data-r="${r}"][data-c="${c}"]`);
+    const parts = key.split('-').map(Number);
+    const el = document.querySelector('.seat[data-r="'+parts[0]+'"][data-c="'+parts[1]+'"]');
     if (el) { el.classList.remove('selected'); el.classList.add('occupied'); }
   });
   selectedSeats.clear();
   updateSummary();
-
-  document.getElementById('confirmBody').innerHTML = `
-    <div class="success-screen">
-      <span class="success-icon">✦</span>
-      <h2 class="success-title">Compra confirmada!</h2>
-      <p class="success-sub">Ingressos reservados.<br>Apresente o código na entrada.</p>
-      <div class="ticket-code">${code}</div>
-      <p style="font-size:.7rem;color:var(--muted);margin-bottom:1rem;">Assentos: ${seatLabels.join(', ')}</p>
-      <a href="${carrinhoUrl}" style="display:block;background:var(--red);color:#fff;padding:.7rem;border-radius:2px;text-decoration:none;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;text-align:center;margin-bottom:.5rem">Adicionar produtos →</a>
-      <a href="index.html?usuario=${encodeURIComponent(usuario)}&tipo=${tipo}" style="display:block;color:var(--muted);font-size:.72rem;text-align:center;text-decoration:none;letter-spacing:.08em">Voltar ao início</a>
-    </div>`;
-  document.getElementById('confirmFoot').style.display = 'none';
+  window.location.href = carrinhoUrl;
 }
 
 function fmt(v) { return 'R$ ' + (v||0).toFixed(2).replace('.', ','); }
@@ -552,7 +535,15 @@ function sugerirAssentos() {
 }
 
 updateSummary();
-} // fim initPage
+  }
+  window._openConfirm = null;
+  document.getElementById("btnConfirmar").onclick = window.confirmarCompra;
+// fim initPage
+document.addEventListener('click', function(e) {
+  if (e.target && (e.target.id === 'btnConfirmar' || e.target.closest('#btnConfirmar'))) {
+    if (window._confirmarCompra) window._confirmarCompra();
+  }
+});
 </script>
 </body>
 </html>

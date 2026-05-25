@@ -355,7 +355,7 @@ async function showFilme(id) {
   document.getElementById('detail').innerHTML = `
     <div class="fade-in">
       <div class="hero-section">
-        <div class="hero-bg" style="background-image:url('${f.posterUrl}');background-position:center"></div>
+        <div class="hero-bg" style="background-image:url('${f.cenaUrl || f.posterUrl}');background-position:center"></div>
         <div class="hero-overlay"></div>
         <div class="hero-content">
           <p class="hero-genero">${f.genero}</p>

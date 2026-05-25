@@ -248,9 +248,9 @@
     }
     .modal-overlay.open { display: flex; }
 
-    .modal {
+    .modal { max-width: 700px !important;
       background: var(--surface); border: 1px solid var(--muted2);
-      border-radius: 4px; width: min(520px, 92vw);
+      border-radius: 4px; width: min(720px, 95vw);
       overflow: hidden; animation: slideUp .25s ease;
     }
 
@@ -366,7 +366,7 @@
 
     <nav class="sidebar-nav">
       <p class="nav-section">Visão Geral</p>
-      <div class="nav-item active" onclick="showSection('dashboard')">
+      <div class="nav-item active" onclick="showSection('dashboard', this)">
         <span class="nav-icon">◈</span> Dashboard
       </div>
       <div class="nav-item" onclick="goHome()">
@@ -374,18 +374,18 @@
       </div>
 
       <p class="nav-section">Gerenciar</p>
-      <div class="nav-item" onclick="showSection('filmes')">
+      <div class="nav-item" onclick="showSection('filmes', this)">
         <span class="nav-icon">🎬</span> Filmes
       </div>
-      <div class="nav-item" onclick="showSection('sessoes')">
+      <div class="nav-item" onclick="showSection('sessoes', this)">
         <span class="nav-icon">🎟</span> Sessões
       </div>
-      <div class="nav-item" onclick="showSection('salas')">
+      <div class="nav-item" onclick="showSection('salas', this)">
         <span class="nav-icon">🏛</span> Salas
       </div>
 
       <p class="nav-section">Administração</p>
-      <div class="nav-item" id="navUsuarios" onclick="showSection('usuarios')">
+      <div class="nav-item" id="navUsuarios" onclick="showSection('usuarios', this)">
         <span class="nav-icon">👤</span> Usuários
       </div>
     </nav>
@@ -417,12 +417,12 @@
       <div class="stats-row">
         <div class="stat-card">
           <p class="stat-label">Filmes em Cartaz</p>
-          <p class="stat-value" id="statFilmes">6</p>
+          <p class="stat-value" id="statFilmes">0</p>
           <p class="stat-delta">↑ Temporada 2026</p>
         </div>
         <div class="stat-card">
           <p class="stat-label">Sessões Hoje</p>
-          <p class="stat-value" id="statSessoes">18</p>
+          <p class="stat-value" id="statSessoes">0</p>
           <p class="stat-delta">↑ 3 salas ativas</p>
         </div>
         <div class="stat-card">
@@ -446,12 +446,7 @@
           <thead><tr>
             <th>Ação</th><th>Detalhes</th><th>Horário</th><th>Status</th>
           </tr></thead>
-          <tbody>
-            <tr><td>Sessão criada</td><td>The Secret Agent — Sala XD — 21:00</td><td>Hoje, 09:14</td><td><span class="badge badge-green">OK</span></td></tr>
-            <tr><td>Usuário cadastrado</td><td>joao123 — Comum</td><td>Hoje, 08:50</td><td><span class="badge badge-green">OK</span></td></tr>
-            <tr><td>Filme adicionado</td><td>Devoradores de Estrelas</td><td>Ontem, 17:32</td><td><span class="badge badge-green">OK</span></td></tr>
-            <tr><td>Sessão esgotada</td><td>Michael — Sala 3D — 18:30</td><td>Ontem, 20:01</td><td><span class="badge badge-gray">Info</span></td></tr>
-          </tbody>
+          <tbody id="tbody-atividade"></tbody>
         </table>
       </div>
     </section>
@@ -468,7 +463,7 @@
         <div class="table-controls">
           <input class="search-input" placeholder="Buscar filme..." oninput="filterTable('tbl-filmes', this.value)" />
         </div>
-        <button class="btn-add" onclick="openModal('filme')">+ Novo Filme</button>
+        <button class="btn-add" onclick="openNovoFilme()">+ Novo Filme</button>
       </div>
       <div class="table-wrap">
         <table id="tbl-filmes">
@@ -492,7 +487,7 @@
         <div class="table-controls">
           <input class="search-input" placeholder="Buscar sessão..." oninput="filterTable('tbl-sessoes', this.value)" />
         </div>
-        <button class="btn-add" onclick="openModal('sessao')">+ Nova Sessão</button>
+        <button class="btn-add" onclick="openNovaSessao()">+ Nova Sessão</button>
       </div>
       <div class="table-wrap">
         <table id="tbl-sessoes">
@@ -564,7 +559,11 @@
       </div>
       <div class="modal-row">
         <div class="field"><label>Gênero</label><input type="text" id="f-genero" placeholder="Ex: Drama" /></div>
-        <div class="field"><label>Duração</label><input type="text" id="f-duracao" placeholder="Ex: 2h 10min" /></div>
+        <div class="field"><label>Duração (min)</label><input type="number" id="f-duracao" placeholder="Ex: 130" /></div>
+      </div>
+      <div class="modal-row">
+        <div class="field"><label>Diretor</label><input type="text" id="f-diretor" placeholder="Ex: Christopher Nolan" /></div>
+        <div class="field"><label>Elenco</label><input type="text" id="f-elenco" placeholder="Ex: Tom Hanks, Meryl Streep" /></div>
       </div>
       <div class="modal-row">
         <div class="field"><label>Classificação</label>
@@ -574,6 +573,29 @@
           </select>
         </div>
         <div class="field"><label>Valor base (R$)</label><input type="number" id="f-valor" placeholder="25.00" step="0.5" /></div>
+      </div>
+      <div class="modal-row">
+        <div class="field">
+          <label>Poster (upload ou URL)</label>
+          <input type="file" id="f-poster-file" accept="image/*" onchange="previewPoster(this)" style="display:none" />
+          <div style="display:flex;gap:.5rem;align-items:center">
+            <button type="button" onclick="document.getElementById('f-poster-file').click()" style="background:var(--surface2);border:1px solid var(--muted2);color:var(--muted);padding:.35rem .7rem;border-radius:2px;cursor:pointer;font-size:.72rem;white-space:nowrap">📁 Escolher</button>
+            <input type="text" id="f-poster" placeholder="ou cole uma URL" style="flex:1" />
+          </div>
+          <img id="f-poster-preview" src="" alt="" style="display:none;margin-top:.5rem;max-height:80px;border-radius:2px;border:1px solid var(--muted2)" />
+        </div>
+        <div class="field">
+          <label>Cena de fundo (upload ou URL)</label>
+          <input type="file" id="f-cena-file" accept="image/*" onchange="previewCena(this)" style="display:none" />
+          <div style="display:flex;gap:.5rem;align-items:center">
+            <button type="button" onclick="document.getElementById('f-cena-file').click()" style="background:var(--surface2);border:1px solid var(--muted2);color:var(--muted);padding:.35rem .7rem;border-radius:2px;cursor:pointer;font-size:.72rem;white-space:nowrap">📁 Escolher</button>
+            <input type="text" id="f-cena" placeholder="ou cole uma URL" style="flex:1" />
+          </div>
+          <img id="f-cena-preview" src="" alt="" style="display:none;margin-top:.5rem;max-height:80px;border-radius:2px;border:1px solid var(--muted2)" />
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="field" style="flex:1"><label>Sinopse</label><textarea id="f-sinopse" rows="3" placeholder="Descrição do filme..." style="width:100%;background:var(--surface2);border:1px solid var(--muted2);color:var(--text);padding:.5rem;border-radius:2px;font-family:inherit;resize:vertical"></textarea></div>
       </div>
     </div>
     <div class="modal-foot">
@@ -627,263 +649,330 @@
 </div>
 
 <script>
-  // ── PARAMS ──────────────────────────────────────────────────────────────────
-  const params  = new URLSearchParams(window.location.search);
-  const usuario = params.get('usuario') || 'Admin';
-  const tipo    = params.get('tipo')    || 'admin';
-  const isAdmin = tipo === 'admin';
+const API = 'http://localhost:8080/api';
+const params = new URLSearchParams(location.search);
+const usuario = params.get('usuario') || '';
+const tipo    = params.get('tipo')    || 'usuario';
+const isAdmin = tipo === 'admin';
 
-  // Redirect if not staff
-  if (tipo !== 'admin' && tipo !== 'funcionario') {
-    window.location.href = 'index.html';
-  }
+let filmes   = [];
+let sessoes  = [];
+let usuarios = [];
 
-  // Set sidebar info
-  document.getElementById('sidebarName').textContent     = usuario;
-  document.getElementById('sidebarAvatar').textContent   = usuario.slice(0,2).toUpperCase();
-  document.getElementById('sidebarRoleBadge').textContent = isAdmin ? 'Administrador' : 'Funcionário';
-  document.getElementById('sidebarRole').textContent      = isAdmin ? 'Administrador' : 'Funcionário';
+// ── INIT ────────────────────────────────────────────────────────────────────
+async function init() {
+  // Sidebar info
+  const su = document.getElementById('sidebar-user'); if(su) su.textContent = usuario;
+  const st = document.getElementById('sidebar-tipo'); if(st) st.textContent = tipo.charAt(0).toUpperCase() + tipo.slice(1);
 
-  // Hide Usuários nav for funcionario
-  if (!isAdmin) {
-    document.getElementById('navUsuarios').classList.add('disabled');
-  }
+  // Esconder aba usuarios se nao for admin
+  const navUsuarios = document.getElementById('navUsuarios');
+  if (!isAdmin) navUsuarios.style.display = 'none';
 
-  // ── DATA ────────────────────────────────────────────────────────────────────
-  let filmes = [
-    { id:1, nome:'The Secret Agent',       genero:'Thriller',  duracao:'2h 10min', class:'16+', valor:28 },
-    { id:2, nome:'O Diabo Veste Prada 2',  genero:'Comédia',   duracao:'1h 58min', class:'12+', valor:25 },
-    { id:3, nome:'Michael',                genero:'Biografia', duracao:'2h 08min', class:'12+', valor:30 },
-    { id:4, nome:'Devoradores de Estrelas',genero:'Ficção',    duracao:'2h 15min', class:'12+', valor:28 },
-    { id:5, nome:'Obsessão',               genero:'Terror',    duracao:'1h 44min', class:'16+', valor:25 },
-    { id:6, nome:'Super Mario Bros.',      genero:'Animação',  duracao:'1h 32min', class:'Livre',valor:22 },
-  ];
+  await loadFilmes();
+  await loadSessoes();
+  if (isAdmin) await loadUsuarios();
+  renderDashboard();
+}
 
-  let sessoes = [
-    { id:1, filmeId:1, data:'2026-05-22', horario:'21:00', sala:'XD',     lugares:142 },
-    { id:2, filmeId:2, data:'2026-05-22', horario:'18:30', sala:'COMUM',  lugares:98  },
-    { id:3, filmeId:3, data:'2026-05-22', horario:'16:00', sala:'SALA3D', lugares:0   },
-    { id:4, filmeId:4, data:'2026-05-22', horario:'13:30', sala:'XD3D',   lugares:55  },
-  ];
+// ── LOAD ────────────────────────────────────────────────────────────────────
+async function loadFilmes() {
+  const r = await fetch(`${API}/filmes`);
+  filmes = await r.json();
+  renderFilmes();
+  updateFilmeSelect();
+}
 
-  let usuarios = [
-    { id:1, user:'joao123',  email:'joao@email.com',    tipo:'usuario',   idade:24 },
-    { id:2, user:'maria_s',  email:'maria@email.com',   tipo:'estudante', idade:20 },
-    { id:3, user:'critic01', email:'critico@imdb.com',  tipo:'critico',   idade:35 },
-  ];
+async function loadSessoes() {
+  // Busca sessoes de todos os filmes
+  const all = await Promise.all(filmes.map(f =>
+    fetch(`${API}/sessoes/filme/${f.id}`).then(r => r.json())
+  ));
+  sessoes = all.flat();
+  renderSessoes();
+}
 
-  let nextId = { filme: 7, sessao: 5, usuario: 4 };
+async function loadUsuarios() {
+  const r = await fetch(`${API}/auth/usuarios`);
+  usuarios = await r.json();
+  renderUsuarios();
+}
 
-  // Update dashboard stats
+// ── DASHBOARD ───────────────────────────────────────────────────────────────
+function renderDashboard() {
   document.getElementById('statFilmes').textContent   = filmes.length;
   document.getElementById('statSessoes').textContent  = sessoes.length;
-  if (isAdmin) {
-    document.getElementById('statUsuarios').textContent    = usuarios.length;
-    document.getElementById('statUsuariosSub').textContent = '↑ Cadastrados';
-  } else {
-    document.getElementById('statUsuarios').textContent    = '—';
-    document.getElementById('statUsuariosSub').textContent = 'Sem acesso';
-  }
+  document.getElementById('statUsuarios').textContent = isAdmin ? usuarios.length : '—';
 
-  // ── NAVIGATION ──────────────────────────────────────────────────────────────
-  function showSection(name) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('sec-' + name).classList.add('active');
-    event.currentTarget.classList.add('active');
-    if (name === 'filmes')  renderFilmes();
-    if (name === 'sessoes') renderSessoes();
-    if (name === 'usuarios' && isAdmin) renderUsuarios();
-  }
+  const tbody = document.querySelector('#sec-dashboard table tbody');
+  if (!tbody) return;
+  const recentes = sessoes.slice(0, 8);
+  tbody.innerHTML = recentes.map(s => {
+    const f = filmes.find(f => f.id === (s.filme ? s.filme.id : s.filmeId));
+    return `<tr>
+      <td>${f ? f.nome : '—'}</td>
+      <td>${s.horario}</td>
+      <td>${s.tipoSala}</td>
+      <td><span class="badge badge-gray">${s.encerrada ? 'Encerrada' : 'Ativa'}</span></td>
+    </tr>`;
+  }).join('');
+}
 
-  // ── RENDER FILMES ────────────────────────────────────────────────────────────
-  function renderFilmes() {
-    const tbody = document.getElementById('tbody-filmes');
-    tbody.innerHTML = filmes.map(f => `
-      <tr>
-        <td>${f.nome}</td>
-        <td>${f.genero}</td>
-        <td>${f.duracao}</td>
-        <td><span class="badge badge-gray">${f.class}</span></td>
-        <td>R$ ${f.valor.toFixed(2)}</td>
-        <td><div class="action-btns">
-          <button class="btn-edit" onclick="editFilme(${f.id})">Editar</button>
-          <button class="btn-del"  onclick="askDelete('filme',${f.id})">Excluir</button>
-        </div></td>
-      </tr>`).join('');
-    updateFilmeSelect();
-  }
+// ── FILMES ──────────────────────────────────────────────────────────────────
+function renderFilmes() {
+  const tbody = document.getElementById('tbody-filmes');
+  tbody.innerHTML = filmes.map(f => `<tr>
+    <td>${f.nome}</td>
+    <td>${f.genero}</td>
+    <td>${f.duracao}</td>
+    <td><span class="badge badge-gray">${f.classe}</span></td>
+    <td>R$ ${(f.valor||0).toFixed(2)}</td>
+    <td><div class="action-btns">
+      <button class="btn-edit" onclick="editFilme(${f.id})">Editar</button>
+      <button class="btn-del"  onclick="askDelete('filme',${f.id})">Excluir</button>
+    </div></td>
+  </tr>`).join('');
+  const sf = document.getElementById('statFilmes');
+  if (sf) sf.textContent = filmes.length;
+  updateFilmeSelect();
+}
 
-  function updateFilmeSelect() {
-    const sel = document.getElementById('s-filme');
-    sel.innerHTML = filmes.map(f => `<option value="${f.id}">${f.nome}</option>`).join('');
-  }
+function updateFilmeSelect() {
+  const sel = document.getElementById('s-filme');
+  if (sel) sel.innerHTML = filmes.map(f => `<option value="${f.id}">${f.nome}</option>`).join('');
+}
 
-  // ── RENDER SESSÕES ───────────────────────────────────────────────────────────
-  function renderSessoes() {
-    const tbody = document.getElementById('tbody-sessoes');
-    const salaLabels = { COMUM:'Comum', SALA3D:'3D', XD:'XD', XD3D:'XD/3D' };
-    tbody.innerHTML = sessoes.map(s => {
-      const filme = filmes.find(f => f.id === s.filmeId);
-      const badge = s.lugares === 0 ? 'badge-red' : s.lugares < 30 ? 'badge-gray' : 'badge-green';
-      const lugaresText = s.lugares === 0 ? 'Esgotado' : s.lugares + ' liv.';
-      return `
-        <tr>
-          <td>${filme ? filme.nome : '—'}</td>
-          <td>${s.data}</td>
-          <td>${s.horario}</td>
-          <td>${salaLabels[s.sala] || s.sala}</td>
-          <td><span class="badge ${badge}">${lugaresText}</span></td>
-          <td><div class="action-btns">
-            <button class="btn-edit" onclick="editSessao(${s.id})">Editar</button>
-            <button class="btn-del"  onclick="askDelete('sessao',${s.id})">Excluir</button>
-          </div></td>
-        </tr>`;
-    }).join('');
-  }
+let editingFilmeId = null;
 
-  // ── RENDER USUÁRIOS ──────────────────────────────────────────────────────────
-  function renderUsuarios() {
-    if (!isAdmin) return;
-    const tipoLabel = { usuario:'Comum', estudante:'Estudante', critico:'Crítico' };
-    const tipoBadge = { usuario:'badge-gray', estudante:'badge-green', critico:'badge-red' };
-    const tbody = document.getElementById('tbody-usuarios');
-    tbody.innerHTML = usuarios.map(u => `
-      <tr>
-        <td>${u.user}</td>
-        <td>${u.email}</td>
-        <td><span class="badge ${tipoBadge[u.tipo]}">${tipoLabel[u.tipo]}</span></td>
-        <td>${u.idade}</td>
-        <td><div class="action-btns">
-          <button class="btn-del" onclick="askDelete('usuario',${u.id})">Excluir</button>
-        </div></td>
-      </tr>`).join('');
-  }
+function openNovoFilme() {
+  editingFilmeId = null;
+  document.getElementById('modal-filme-title').textContent = 'Novo Filme';
+  ['f-nome','f-genero','f-duracao','f-valor','f-poster','f-cena','f-diretor','f-elenco','f-sinopse'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-class').value = 'Livre';
+  document.getElementById('f-poster-preview').style.display = 'none';
+  document.getElementById('f-cena-preview').style.display = 'none';
+  openModal('modal-filme');
+}
 
-  // ── MODALS ───────────────────────────────────────────────────────────────────
-  function openModal(type) {
-    document.getElementById('modal-' + type).classList.add('open');
-  }
-  function closeModal(id) {
-    document.getElementById(id).classList.remove('open');
-    pendingDelete = null;
-  }
+function editFilme(id) {
+  const f = filmes.find(x => x.id === id);
+  if (!f) return;
+  editingFilmeId = id;
+  document.getElementById('modal-filme-title').textContent = 'Editar Filme';
+  document.getElementById('f-nome').value    = f.nome || '';
+  document.getElementById('f-genero').value  = f.genero || '';
+  document.getElementById('f-duracao').value = f.duracao || '';
+  document.getElementById('f-valor').value   = f.valor || '';
+  document.getElementById('f-class').value   = f.classe || 'Livre';
+  document.getElementById('f-diretor').value = f.diretor || '';
+  document.getElementById('f-elenco').value  = f.elenco || '';
+  document.getElementById('f-poster').value  = f.posterUrl || '';
+  document.getElementById('f-cena').value    = f.cenaUrl || '';
+  document.getElementById('f-sinopse').value = f.sinopse || '';
+  openModal('modal-filme');
+}
 
-  // Close on overlay click
-  document.querySelectorAll('.modal-overlay').forEach(ov => {
-    ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
-  });
+async function saveFilme() {
+  const filme_atual = editingFilmeId ? (filmes.find(x=>x.id===editingFilmeId)||{}) : {};
+  const body = {
+    nome:     document.getElementById('f-nome').value.trim(),
+    genero:   document.getElementById('f-genero').value.trim(),
+    duracao:  parseInt(document.getElementById('f-duracao').value) || 0,
+    valor:    parseFloat(document.getElementById('f-valor').value) || 0,
+    classe:   document.getElementById('f-class').value,
+    sinopse:  document.getElementById('f-sinopse').value.trim(),
+    diretor:  document.getElementById('f-diretor').value.trim(),
+    elenco:   document.getElementById('f-elenco').value.trim(),
+    posterUrl: document.getElementById('f-poster').value.trim(),
+    cenaUrl:  document.getElementById('f-cena').value.trim(),
+    nota:     filme_atual.nota || 0,
+    quantidadeCriticos: filme_atual.quantidadeCriticos || 0,
+    emCartaz: true,
+  };
+  if (!body.nome) { alert('Nome obrigatório'); return; }
 
-  // ── FILME CRUD ───────────────────────────────────────────────────────────────
-  let editingFilmeId = null;
+  const url    = editingFilmeId ? `${API}/filmes/${editingFilmeId}` : `${API}/filmes`;
+  const method = editingFilmeId ? 'PUT' : 'POST';
 
-  function editFilme(id) {
-    const f = filmes.find(x => x.id === id);
-    if (!f) return;
-    editingFilmeId = id;
-    document.getElementById('f-nome').value    = f.nome;
-    document.getElementById('f-genero').value  = f.genero;
-    document.getElementById('f-duracao').value = f.duracao;
-    document.getElementById('f-class').value   = f.class;
-    document.getElementById('f-valor').value   = f.valor;
-    document.getElementById('modal-filme-title').textContent = 'Editar Filme';
-    openModal('filme');
-  }
-
-  function saveFilme() {
-    const nome    = document.getElementById('f-nome').value.trim();
-    const genero  = document.getElementById('f-genero').value.trim();
-    const duracao = document.getElementById('f-duracao').value.trim();
-    const cls     = document.getElementById('f-class').value;
-    const valor   = parseFloat(document.getElementById('f-valor').value);
-    if (!nome || !genero || !duracao || isNaN(valor)) { alert('Preencha todos os campos.'); return; }
-
-    if (editingFilmeId) {
-      const f = filmes.find(x => x.id === editingFilmeId);
-      Object.assign(f, { nome, genero, duracao, class: cls, valor });
-      editingFilmeId = null;
-    } else {
-      filmes.push({ id: nextId.filme++, nome, genero, duracao, class: cls, valor });
-    }
+  const r = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  if (r.ok) {
     closeModal('modal-filme');
-    renderFilmes();
-    document.getElementById('statFilmes').textContent = filmes.length;
-    // Reset form
-    ['f-nome','f-genero','f-duracao','f-valor'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('modal-filme-title').textContent = 'Novo Filme';
+    await loadFilmes();
+    await loadSessoes();
+    renderDashboard();
+  } else {
+    alert('Erro ao salvar filme');
   }
+}
 
-  // ── SESSÃO CRUD ──────────────────────────────────────────────────────────────
-  let editingSessaoId = null;
+// ── SESSÕES ──────────────────────────────────────────────────────────────────
+function renderSessoes() {
+  const tbody = document.getElementById('tbody-sessoes');
+  tbody.innerHTML = sessoes.map(s => {
+    const f = s.filme || filmes.find(f => f.id === s.filmeId);
+    const ocupados = s.assentosOcupados ? s.assentosOcupados.split(',').filter(Boolean).length : 0;
+    const total = 150;
+    const livres = total - ocupados;
+    const badge = livres === 0 ? 'badge-red' : livres < 30 ? 'badge-yellow' : 'badge-green';
+    return `<tr>
+      <td>${f ? f.nome : '—'}</td>
+      <td>${s.data || "-"}</td>
+          <td>${s.horario}</td>
+      <td>${s.tipoSala}</td>
+      <td><span class="badge ${badge}">${livres} liv.</span></td>
+      <td><div class="action-btns">
+        <button class="btn-edit" onclick="editSessao(${s.id})">Editar</button>
+        <button class="btn-del"  onclick="askDelete('sessao',${s.id})">Excluir</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  const ss = document.getElementById('statSessoes');
+  if (ss) ss.textContent = sessoes.length;
+}
 
-  function editSessao(id) {
-    const s = sessoes.find(x => x.id === id);
-    if (!s) return;
-    editingSessaoId = id;
-    document.getElementById('s-filme').value   = s.filmeId;
-    document.getElementById('s-data').value    = s.data;
-    document.getElementById('s-horario').value = s.horario;
-    document.getElementById('s-sala').value    = s.sala;
-    document.getElementById('modal-sessao-title').textContent = 'Editar Sessão';
-    openModal('sessao');
-  }
+let editingSessaoId = null;
 
-  function saveSessao() {
-    const filmeId = parseInt(document.getElementById('s-filme').value);
-    const data    = document.getElementById('s-data').value;
-    const horario = document.getElementById('s-horario').value;
-    const sala    = document.getElementById('s-sala').value;
-    if (!data || !horario) { alert('Preencha todos os campos.'); return; }
+function openNovaSessao() {
+  editingSessaoId = null;
+  document.getElementById('modal-sessao-title').textContent = 'Nova Sessão';
+  document.getElementById('s-horario').value = '';
+  document.getElementById('s-data').value    = '';
+  document.getElementById('s-sala').value    = 'COMUM';
+  openModal('modal-sessao');
+}
 
-    if (editingSessaoId) {
-      const s = sessoes.find(x => x.id === editingSessaoId);
-      Object.assign(s, { filmeId, data, horario, sala });
-      editingSessaoId = null;
-    } else {
-      sessoes.push({ id: nextId.sessao++, filmeId, data, horario, sala, lugares: 150 });
-    }
+function editSessao(id) {
+  const s = sessoes.find(x => x.id === id);
+  if (!s) return;
+  editingSessaoId = id;
+  document.getElementById('modal-sessao-title').textContent = 'Editar Sessão';
+    updateFilmeSelect();
+  document.getElementById('s-filme').value   = s.filme ? s.filme.id : '';
+  document.getElementById('s-horario').value = s.horario;
+  document.getElementById('s-data').value    = s.data || '';
+  document.getElementById('s-sala').value    = s.tipoSala || 'COMUM';
+  openModal('modal-sessao');
+}
+
+async function saveSessao() {
+  const filmeId  = document.getElementById('s-filme').value;
+  const horario  = document.getElementById('s-horario').value;
+  const tipoSala = document.getElementById('s-sala').value;
+
+  if (!filmeId || !horario) { alert('Preencha filme e horário'); return; }
+
+  const data = document.getElementById('s-data').value;
+  const body = { horario, tipoSala, data, emCartaz: true, encerrada: false, assentosOcupados: '', filme: { id: parseInt(filmeId) } };
+
+  const url    = editingSessaoId ? `${API}/sessoes/${editingSessaoId}` : `${API}/sessoes`;
+  const method = editingSessaoId ? 'PUT' : 'POST';
+
+  const r = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  if (r.ok) {
     closeModal('modal-sessao');
-    renderSessoes();
-    document.getElementById('modal-sessao-title').textContent = 'Nova Sessão';
+    await loadSessoes();
+    renderDashboard();
+  } else {
+    alert('Erro ao salvar sessão');
   }
+}
 
-  // ── DELETE ───────────────────────────────────────────────────────────────────
-  let pendingDelete = null;
+// ── USUÁRIOS ─────────────────────────────────────────────────────────────────
+function renderUsuarios() {
+  if (!isAdmin) return;
+  const tipoLabel = { usuario:'Comum', estudante:'Estudante', critico:'Crítico', admin:'Admin', funcionario:'Funcionário' };
+  const tipoBadge = { usuario:'badge-gray', estudante:'badge-green', critico:'badge-red', admin:'badge-red', funcionario:'badge-yellow' };
+  const tbody = document.getElementById('tbody-usuarios');
+  tbody.innerHTML = usuarios.map(u => `<tr>
+    <td>${u.user}</td>
+    <td>${u.email}</td>
+    <td><span class="badge ${tipoBadge[u.tipo]||'badge-gray'}">${tipoLabel[u.tipo]||u.tipo}</span></td>
+    <td>${u.idade || '—'}</td>
+    <td><div class="action-btns">
+      <button class="btn-del" onclick="askDelete('usuario',${u.id})">Excluir</button>
+    </div></td>
+  </tr>`).join('');
+  const su = document.getElementById('statUsuarios'); if (su) su.textContent = usuarios.length;
+}
 
-  function askDelete(type, id) {
-    pendingDelete = { type, id };
-    const msgs = {
-      filme:   'Tem certeza que deseja excluir este filme? As sessões vinculadas também serão afetadas.',
-      sessao:  'Tem certeza que deseja excluir esta sessão?',
-      usuario: 'Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.',
-    };
-    document.getElementById('confirm-msg').textContent = msgs[type];
-    openModal('modal-confirm');
+// ── DELETE ───────────────────────────────────────────────────────────────────
+let pendingDelete = null;
+
+function askDelete(type, id) {
+  pendingDelete = { type, id };
+  const msgs = {
+    filme:   'Tem certeza que deseja excluir este filme? As sessões vinculadas também serão afetadas.',
+    sessao:  'Tem certeza que deseja excluir esta sessão?',
+    usuario: 'Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.',
+  };
+  document.getElementById('confirm-msg').textContent = msgs[type];
+  openModal('modal-confirm');
+}
+
+async function confirmDelete() {
+  if (!pendingDelete) return;
+  const { type, id } = pendingDelete;
+  const urls = { filme: `${API}/filmes/${id}`, sessao: `${API}/sessoes/${id}`, usuario: `${API}/auth/usuarios/${id}` };
+  const r = await fetch(urls[type], { method: 'DELETE' });
+  if (r.ok || r.status === 204) {
+    if (type === 'filme')   { await loadFilmes(); await loadSessoes(); }
+    if (type === 'sessao')  { await loadSessoes(); }
+    if (type === 'usuario') { await loadUsuarios(); }
+    renderDashboard();
   }
+  closeModal('modal-confirm');
+  pendingDelete = null;
+}
 
-  function confirmDelete() {
-    if (!pendingDelete) return;
-    const { type, id } = pendingDelete;
-    if (type === 'filme')   { filmes   = filmes.filter(x => x.id !== id);   renderFilmes();   document.getElementById('statFilmes').textContent = filmes.length; }
-    if (type === 'sessao')  { sessoes  = sessoes.filter(x => x.id !== id);  renderSessoes(); }
-    if (type === 'usuario' && isAdmin) { usuarios = usuarios.filter(x => x.id !== id); renderUsuarios(); document.getElementById('statUsuarios').textContent = usuarios.length; }
-    closeModal('modal-confirm');
-  }
+// ── MODALS ───────────────────────────────────────────────────────────────────
+function previewPoster(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('f-poster-preview');
+    prev.src = e.target.result;
+    prev.style.display = 'block';
+    document.getElementById('f-poster').value = e.target.result;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
 
-  // ── SEARCH ───────────────────────────────────────────────────────────────────
-  function filterTable(tableId, query) {
-    const q = query.toLowerCase();
-    document.querySelectorAll('#' + tableId + ' tbody tr').forEach(tr => {
-      tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
-    });
-  }
+function previewCena(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('f-cena-preview');
+    prev.src = e.target.result;
+    prev.style.display = 'block';
+    document.getElementById('f-cena').value = e.target.result;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
 
-  // ── AUTH ─────────────────────────────────────────────────────────────────────
-  function logout() { window.location.href = 'login.html'; }
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-  function goHome() {
-    window.location.href = 'index.html?usuario=' + encodeURIComponent(usuario) + '&tipo=' + tipo;
-  }
+// ── NAV ──────────────────────────────────────────────────────────────────────
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+// ── SEARCH ───────────────────────────────────────────────────────────────────
+function filterTable(tableId, query) {
+  const q = query.toLowerCase();
+  document.querySelectorAll('#' + tableId + ' tbody tr').forEach(tr => {
+    tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// ── AUTH ─────────────────────────────────────────────────────────────────────
+function logout()  { window.location.href = 'login.html'; }
+function goHome()  { window.location.href = 'index.html?usuario=' + encodeURIComponent(usuario) + '&tipo=' + tipo; }
+
+init();
 </script>
 </body>
 </html>
