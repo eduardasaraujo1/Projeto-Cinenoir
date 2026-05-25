@@ -1,5 +1,3 @@
 cinema-backend/target/
 *.class
-*.db
 .DS_Store
-*.db
