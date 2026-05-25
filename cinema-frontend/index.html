@@ -954,7 +954,7 @@ async function carregarFilmes() {
     FILMES = FILMES.map(f => ({
       ...f,
       poster: f.posterUrl,
-      classificacao: f.classe
+      classificacao: f.classificacao
     }));
       await carregarSessoes();
       ALL_DATES.length = 0;
