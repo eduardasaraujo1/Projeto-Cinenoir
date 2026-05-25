@@ -16,7 +16,131 @@ Sistema de cinema desenvolvido com **Spring Boot** (backend) e **HTML/CSS/JS pur
 **Frontend**
 - HTML5, CSS3, JavaScript puro (sem frameworks)
 - Comunicação via `fetch` com a API REST
-- Servidor de desenvolvimento: `python3 -m http.server`
+
+---
+
+## Pré-requisitos
+
+| Ferramenta | Versão mínima | Como verificar |
+|---|---|---|
+| Java (JDK) | 17 | `java -version` |
+| Maven | 3.8 | `mvn -version` |
+| Python | 3.x | `python3 --version` (Linux/Mac) ou `python --version` (Windows) |
+
+> O banco de dados SQLite já está incluído no projeto (`cinema-backend/cinema.db`) — não é necessário instalar nada adicional.
+
+**Links para download:**
+- Java 17: https://www.oracle.com/java/technologies/downloads/#java17
+- Maven: https://maven.apache.org/download.cgi
+- Python: https://www.python.org/downloads/
+
+---
+
+## Como Rodar
+
+O projeto precisa de **dois processos rodando ao mesmo tempo**: o backend (Spring Boot) e o frontend (servidor Python). Abra dois terminais separados.
+
+---
+
+### 🪟 Windows
+
+**Terminal 1 — Backend:**
+
+Abra o Prompt de Comando ou PowerShell na pasta do projeto e execute:
+
+```cmd
+cd cinema-backend
+mvnw.cmd spring-boot:run
+```
+
+> Use `mvnw.cmd` em vez de `mvn` — ele já vem incluído no projeto e não exige Maven instalado.
+
+Aguarde aparecer no log:
+```
+Started CinemaApplication in X.XXX seconds
+```
+
+**Terminal 2 — Frontend:**
+
+```cmd
+cd cinema-frontend
+python -m http.server 3000
+```
+
+> Se o comando `python` não funcionar, tente `python3 -m http.server 3000`.
+
+Acesse **http://localhost:3000** no navegador.
+
+---
+
+### 🐧 Linux
+
+**Terminal 1 — Backend:**
+
+```bash
+cd cinema-backend
+./mvnw spring-boot:run
+```
+
+Aguarde aparecer no log:
+```
+Started CinemaApplication in X.XXX seconds
+```
+
+**Terminal 2 — Frontend:**
+
+```bash
+cd cinema-frontend
+python3 -m http.server 3000
+```
+
+Acesse **http://localhost:3000** no navegador.
+
+Para encerrar tudo de uma vez:
+
+```bash
+pkill -f "spring-boot" && pkill -f "http.server"
+```
+
+Ou use o script incluído no projeto:
+
+```bash
+bash iniciar.sh
+```
+
+---
+
+### 🍎 macOS
+
+**Terminal 1 — Backend:**
+
+```bash
+cd cinema-backend
+./mvnw spring-boot:run
+```
+
+Aguarde aparecer no log:
+```
+Started CinemaApplication in X.XXX seconds
+```
+
+**Terminal 2 — Frontend:**
+
+```bash
+cd cinema-frontend
+python3 -m http.server 3000
+```
+
+Acesse **http://localhost:3000** no navegador.
+
+---
+
+### ⚠️ Observações importantes
+
+- Na **primeira execução**, o Maven baixa todas as dependências automaticamente — isso pode levar alguns minutos dependendo da conexão com a internet.
+- O backend **precisa estar rodando** antes de abrir o frontend no navegador.
+- Não feche o terminal do backend enquanto estiver usando o sistema.
+- As portas **8080** (backend) e **3000** (frontend) precisam estar livres.
 
 ---
 
@@ -24,6 +148,8 @@ Sistema de cinema desenvolvido com **Spring Boot** (backend) e **HTML/CSS/JS pur
 
 ```
 Projeto-Cinenoir/
+├── iniciar.sh               # Script para subir tudo de uma vez (Linux/Mac)
+├── README.md
 ├── cinema-backend/          # API REST Spring Boot
 │   ├── src/main/java/br/cinenoir/
 │   │   ├── controller/      # AuthController, FilmeController, SessaoController, CriticaController
@@ -32,7 +158,9 @@ Projeto-Cinenoir/
 │   │   └── CinemaApplication.java
 │   ├── src/main/resources/
 │   │   └── application.properties
-│   ├── cinema.db            # Banco SQLite
+│   ├── cinema.db            # Banco SQLite com dados de exemplo
+│   ├── mvnw                 # Maven Wrapper (Linux/Mac)
+│   ├── mvnw.cmd             # Maven Wrapper (Windows)
 │   └── pom.xml
 └── cinema-frontend/         # Páginas HTML
     ├── index.html           # Home com programação e filmes em cartaz
@@ -50,45 +178,16 @@ Projeto-Cinenoir/
 
 ---
 
-## Como Rodar
-
-### Pré-requisitos
-
-- Java 17+
-- Maven
-- Python 3 (para o servidor frontend)
-- SQLite3 (opcional, para inspecionar o banco)
-
-### 1. Backend
-
-```bash
-cd cinema-backend
-mvn spring-boot:run
-```
-
-O backend sobe na porta **8080**.
-
-### 2. Frontend
-
-```bash
-cd cinema-frontend
-python3 -m http.server 3000
-```
-
-O frontend fica disponível em **http://localhost:3000**.
-
----
-
 ## Usuários de Teste
 
-| Usuário | Senha | Tipo |
-|---|---|---|
-| `admin` | `admin123` | Admin |
-| `funcionario` | `func123` | Funcionário |
-| `mario` | `mario1234` | Crítico |
-| `duda` | `duda123` | Crítico |
-| `eduarda` | `eduarda1234` | Estudante |
-| `teste` | `Teste123__` | Cliente |
+| Usuário | Senha | Tipo | Acesso |
+|---|---|---|---|
+| `admin` | `admin123` | Admin | Painel completo |
+| `funcionario` | `func123` | Funcionário | Painel sem gestão de usuários |
+| `mario` | `mario1234` | Crítico | Painel do crítico + ingresso gratuito |
+| `duda` | `duda123` | Crítico | Painel do crítico + ingresso gratuito |
+| `eduarda` | `eduarda1234` | Estudante | 50% de desconto |
+| `teste` | `Teste123__` | Cliente | Compra normal |
 
 ---
 
@@ -97,40 +196,35 @@ O frontend fica disponível em **http://localhost:3000**.
 ### Site (Público)
 
 - **Home (`index.html`)** — hero animado, seletor de datas com sessões por filme, seção "Em Cartaz" com cards
-- **Filme (`filmes.html`)** — hero com cena de fundo, sinopse, diretor, elenco, classificação etária, críticas de especialistas
-- **Assentos (`assentos.html`)** — mapa de assentos com ocupação dinâmica da API, modal de confirmação
-- **Carrinho (`carrinho.html`)** — ingressos, produtos do balcão, cupons promocionais (PROMO5, PROMO10, PROMO20), resumo com total e finalização
+- **Filme (`filmes.html`)** — hero com cena de fundo, sinopse, diretor, elenco, classificação etária, críticas
+- **Assentos (`assentos.html`)** — mapa de assentos com ocupação dinâmica via API
+- **Carrinho (`carrinho.html`)** — ingressos, produtos do balcão, cupons promocionais, resumo e finalização
 
 ### Autenticação
 
-- **Login (`login.html`)** — autenticação via `POST /api/auth/login`
+- **Login (`login.html`)** — autenticação via API
 - **Cadastro (`cadastro.html`)** — fluxo em 4 passos com validação
 - **Recuperação de senha (`esqueci-senha.html`)** — fluxo completo com token
 
 ### Área do Usuário
 
-- **Perfil (`perfil.html`)** — dados pessoais, alteração de senha, histórico de compras, cupons disponíveis
+- **Perfil (`perfil.html`)** — dados pessoais, alteração de senha, histórico de compras, cupons
   - Estudantes: 50% de desconto automático
-  - Idosos: desconto meia-entrada
+  - Críticos: ingresso gratuito
 
 ### Painel do Crítico (`critico.html`)
 
-- Lista todos os filmes em cartaz com nota média e quantidade de críticos
-- Atribuição de nota (1–10) e escrita de crítica (mínimo 20 caracteres)
-- Publicação via `POST /api/criticas/filme/{id}` com recálculo automático da média
-- Aba "Minhas Críticas" com histórico persistido e botão de exclusão
-- Exclusão via `DELETE /api/criticas/{id}` com recálculo automático da nota do filme
-- Ingresso gratuito para críticos (100% de desconto)
+- Lista todos os filmes em cartaz com nota média
+- Atribuição de nota (1–10) e escrita de crítica
+- Recálculo automático da média do filme ao publicar ou excluir crítica
+- Aba "Minhas Críticas" com histórico persistido
 
 ### Painel Admin/Funcionário (`painel.html`)
 
-Acessado automaticamente após login com tipo `admin` ou `funcionario`.
-
-- **Dashboard** — filmes em cartaz, total de sessões, usuários cadastrados
-- **Filmes** — CRUD completo (nome, gênero, duração, classificação etária, diretor, elenco, poster, cena de fundo, valor base)
-- **Sessões** — CRUD com data, horário, tipo de sala, vínculo com filme
-- **Salas** — visualização dos tipos disponíveis (Comum, 3D, XD, XD/3D)
-- **Usuários** — listagem e exclusão *(somente admin; funcionário não tem acesso)*
+- **Dashboard** — visão geral do sistema
+- **Filmes** — CRUD completo
+- **Sessões** — CRUD com data, horário e tipo de sala
+- **Usuários** — listagem e exclusão *(somente admin)*
 
 ---
 
@@ -178,31 +272,7 @@ Acessado automaticamente após login com tipo `admin` ou `funcionario`.
 
 ---
 
-## Tipos de Usuário
-
-| Tipo | Acesso |
-|---|---|
-| `cliente` | Compra ingressos, gerencia perfil |
-| `estudante` | Idem + 50% de desconto automático |
-| `critico` | Idem + painel do crítico + ingresso gratuito |
-| `funcionario` | Painel admin (filmes, sessões, salas) |
-| `admin` | Painel completo + gerenciamento de usuários |
-
----
-
-## Banco de Dados
-
-O banco SQLite (`cinema.db`) fica em `cinema-backend/cinema.db`.
-
-### Tabelas
-
-- `filmes` — catálogo de filmes
-- `sessoes` — sessões com data, horário, sala e assentos ocupados
-- `usuarios` — contas de usuários
-- `critica` — avaliações dos críticos vinculadas a filmes
-- `bilhetes` — ingressos gerados nas compras
-
-### Cupons Disponíveis
+## Cupons Disponíveis
 
 | Cupom | Desconto |
 |---|---|
@@ -214,14 +284,9 @@ Cada cupom pode ser usado apenas uma vez por usuário.
 
 ---
 
-## Configuração
+## Portas Utilizadas
 
-`cinema-backend/src/main/resources/application.properties`:
-
-```properties
-spring.datasource.url=jdbc:sqlite:cinema.db
-spring.datasource.driver-class-name=org.sqlite.JDBC
-spring.jpa.database-platform=org.hibernate.community.dialect.SQLiteDialect
-spring.jpa.hibernate.ddl-auto=update
-server.port=8080
-```
+| Serviço | Porta | URL |
+|---|---|---|
+| Frontend | 3000 | http://localhost:3000 |
+| Backend | 8080 | http://localhost:8080 |
