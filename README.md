@@ -195,7 +195,6 @@ Projeto-Cinenoir/
 | `admin` | `admin123` | Admin | Painel completo |
 | `funcionario` | `func123` | Funcionário | Painel sem gestão de usuários |
 | `mario` | `mario1234` | Crítico | Painel do crítico + ingresso gratuito |
-| `duda` | `duda123` | Crítico | Painel do crítico + ingresso gratuito |
 | `eduarda` | `eduarda1234` | Estudante | 50% de desconto |
 | `teste` | `Teste123__` | Cliente | Compra normal |
 
